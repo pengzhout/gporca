@@ -36,9 +36,6 @@ namespace gpnaucrates
 	private:
 
 	public:
-		// derive statistics for the given join predicate
-		static
-		IStatistics *PstatsJoinArray(IMemoryPool *pmp, BOOL fOuterJoin, DrgPstat *pdrgpstat, CExpression *pexprScalar);
 
 		// helper for inner-joining histograms
 		static
