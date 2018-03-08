@@ -61,13 +61,9 @@ namespace gpnaucrates
 						const CHistogram *phistInner,
 						CHistogram *phistJoin
 				);
-
-	public:
-
-
-		// for the output stats object, compute its upper bound cardinality mapping based on the bounding method
-		// estimated output cardinality and information maintained in the current stats object
-		// TODO: Melanie -- making it public for now so LOJ processor can use it...please fixme
+//		// for the output stats object, compute its upper bound cardinality mapping based on the bounding method
+//		// estimated output cardinality and information maintained in the current stats object
+//		// TODO: Melanie -- making it public for now so LOJ processor can use it...please fixme
 		static
 		void ComputeCardUpperBounds
 				(
@@ -77,6 +73,10 @@ namespace gpnaucrates
 						CDouble dRowsOutput, // estimated output cardinality of the operator
 						CStatistics::ECardBoundingMethod ecbm // technique used to estimate max source cardinality in the output stats object
 				);
+	public:
+
+
+
 
 		// main driver to generate join stats
 		static
@@ -110,6 +110,10 @@ namespace gpnaucrates
 				);
 		static
 		IStatistics *PstatsJoinArray(IMemoryPool *pmp, BOOL fOuterJoin, DrgPstat *pdrgpstat, CExpression *pexprScalar);
+
+		// LOJ with another stats structure
+		static
+		CStatistics *PstatsLOJ(IMemoryPool *pmp, const IStatistics *pistatsOuter, const IStatistics *pistatsInner, DrgPstatspredjoin *pdrgpstatspredjoin);
 	};
 }
 

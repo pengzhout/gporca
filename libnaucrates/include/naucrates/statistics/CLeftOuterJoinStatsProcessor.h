@@ -37,26 +37,8 @@ namespace gpnaucrates
 
 	public:
 
-		// helper for inner-joining histograms
-		static
-		void JoinHistograms
-				(
-						IMemoryPool *pmp,
-						const CHistogram *phist1,
-						const CHistogram *phist2,
-						CStatsPredJoin *pstatsjoin,
-						CDouble dRows1,
-						CDouble dRows2,
-						CHistogram **pphist1, // output: histogram 1 after join
-						CHistogram **pphist2, // output: histogram 2 after join
-						CDouble *pdScaleFactor, // output: scale factor based on the join
-						BOOL fEmptyInput // if true, one of the inputs is empty
-				);
 
 
-		// LOJ with another stats structure
-		static
-		CStatistics *PstatsLOJ(IMemoryPool *pmp, const IStatistics *pistatsOuter, const IStatistics *pistatsInner, DrgPstatspredjoin *pdrgpstatspredjoin);
 
 
 	};
