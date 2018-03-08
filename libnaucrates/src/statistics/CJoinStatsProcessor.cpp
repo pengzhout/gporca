@@ -25,6 +25,7 @@
 #include "naucrates/statistics/CStatisticsUtils.h"
 #include "naucrates/statistics/CJoinStatsProcessor.h"
 #include "naucrates/statistics/CLeftAntiSemiJoinStatsProcessor.h"
+#include "naucrates/statistics/CLeftOuterJoinStatsProcessor.h"
 #include "naucrates/statistics/CInnerJoinStatsProcessor.h"
 #include "naucrates/statistics/CStatistics.h"
 #include "naucrates/statistics/CStatsPredJoin.h"
@@ -94,6 +95,26 @@ CJoinStatsProcessor::JoinHistograms
 
 	CInnerJoinStatsProcessor::JoinHistograms(pmp, phist1, phist2, pstatsjoin, dRows1, dRows2, pphist1, pphist2, pdScaleFactor, fEmptyInput);
 }
+
+//	derive statistics for the given join predicate
+IStatistics *
+CJoinStatsProcessor::PstatsJoinArray
+		(
+				IMemoryPool *pmp,
+				BOOL fOuterJoin,
+				DrgPstat *pdrgpstat,
+				CExpression *pexprScalar
+		)
+{
+	if(fOuterJoin)
+	{
+		return CLeftOuterJoinStatsProcessor::PstatsJoinArray(pmp, fOuterJoin, pdrgpstat, pexprScalar);
+	}
+
+	return CInnerJoinStatsProcessor::PstatsJoinArray(pmp, fOuterJoin, pdrgpstat, pexprScalar);
+
+}
+
 
 
 // main driver to generate join stats

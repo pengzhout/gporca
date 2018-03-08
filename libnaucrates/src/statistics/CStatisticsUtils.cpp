@@ -24,6 +24,7 @@
 
 #include "naucrates/statistics/CStatisticsUtils.h"
 #include "naucrates/statistics/CInnerJoinStatsProcessor.h"
+#include "naucrates/statistics/CJoinStatsProcessor.h"
 #include "naucrates/statistics/CStatistics.h"
 #include "naucrates/statistics/CStatsPredUtils.h"
 #include "naucrates/statistics/CStatsPredDisj.h"
@@ -1146,7 +1147,7 @@ CStatisticsUtils::PstatsDeriveWithOuterRefs
 
 	// join outer stats object based on given scalar expression,
 	// we use inner join semantics here to consider all relevant combinations of outer tuples
-	IStatistics *pstatsOuter = CInnerJoinStatsProcessor::PstatsJoinArray(pmp, false /*fOuterJoin*/, pdrgpstatOuter, pexprScalar);
+	IStatistics *pstatsOuter = CJoinStatsProcessor::PstatsJoinArray(pmp, false /*fOuterJoin*/, pdrgpstatOuter, pexprScalar);
 	CDouble dRowsOuter = pstatsOuter->DRows();
 
 	// join passed stats object and outer stats based on the passed join type
@@ -1154,7 +1155,7 @@ CStatisticsUtils::PstatsDeriveWithOuterRefs
 	pdrgpstat->Append(pstatsOuter);
 	pstats->AddRef();
 	pdrgpstat->Append(pstats);
-	IStatistics *pstatsJoined = CInnerJoinStatsProcessor::PstatsJoinArray(pmp, fOuterJoin, pdrgpstat, pexprScalar);
+	IStatistics *pstatsJoined = CJoinStatsProcessor::PstatsJoinArray(pmp, fOuterJoin, pdrgpstat, pexprScalar);
 	pdrgpstat->Release();
 
 	// scale result using cardinality of outer stats and set number of rebinds of returned stats
@@ -1245,8 +1246,9 @@ CStatisticsUtils::PstatsJoinWithOuterRefs
 
 	BOOL fOuterJoin = (COperator::EopLogicalLeftOuterJoin == eopid);
 
+	// TODO: Melanie add PstatsJoinArray to the PSt
 	// derive stats based on local join condition
-	IStatistics *pstatsResult = CInnerJoinStatsProcessor::PstatsJoinArray(pmp, fOuterJoin, pdrgpstatChildren, pexprScalarLocal);
+	IStatistics *pstatsResult = CJoinStatsProcessor::PstatsJoinArray(pmp, fOuterJoin, pdrgpstatChildren, pexprScalarLocal);
 
 	if (exprhdl.FHasOuterRefs() && 0 < pdrgpstatOuter->UlLength())
 	{

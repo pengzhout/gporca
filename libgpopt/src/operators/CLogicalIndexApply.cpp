@@ -7,7 +7,7 @@
 
 #include "gpos/base.h"
 #include "gpopt/operators/CLogicalIndexApply.h"
-#include "naucrates/statistics/CInnerJoinStatsProcessor.h"
+#include "naucrates/statistics/CJoinStatsProcessor.h"
 
 using namespace gpopt;
 
@@ -107,7 +107,7 @@ CLogicalIndexApply::PstatsDerive
 	pdrgpstat->Append(pstatsOuter);
 	pstatsInner->AddRef();
 	pdrgpstat->Append(pstatsInner);
-	IStatistics *pstats = CInnerJoinStatsProcessor::PstatsJoinArray(pmp, m_fOuterJoin, pdrgpstat, pexprScalar);
+	IStatistics *pstats = CJoinStatsProcessor::PstatsJoinArray(pmp, m_fOuterJoin, pdrgpstat, pexprScalar);
 	pdrgpstat->Release();
 
 	return pstats;

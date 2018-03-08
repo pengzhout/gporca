@@ -105,7 +105,8 @@ namespace gpnaucrates
 						BOOL fEmptyInput, // if true, one of the inputs is empty
 						BOOL fIgnoreLasjHistComputation
 				);
-
+		static
+		IStatistics *PstatsJoinArray(IMemoryPool *pmp, BOOL fOuterJoin, DrgPstat *pdrgpstat, CExpression *pexprScalar);
 	};
 }
 
