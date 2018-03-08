@@ -18,6 +18,7 @@
 
 #include "naucrates/statistics/CJoinStatsProcessor.h"
 
+#include "naucrates/statistics/CLeftOuterJoinStatsProcessor.h"
 #include "gpos/common/CBitSet.h"
 #include "gpos/sync/CAutoMutex.h"
 #include "gpos/memory/CAutoMemoryPool.h"
@@ -491,7 +492,7 @@ CStatistics::PstatsLOJ
 	)
 	const
 {
-	return CJoinStatsProcessor::PstatsLOJStatic(pmp, this, pstatsOther, pdrgpstatspredjoin);
+	return CLeftOuterJoinStatsProcessor::PstatsLOJStatic(pmp, this, pstatsOther, pdrgpstatspredjoin);
 }
 
 

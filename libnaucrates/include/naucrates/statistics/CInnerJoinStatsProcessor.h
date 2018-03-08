@@ -15,6 +15,7 @@
 #include "naucrates/statistics/CStatsPredJoin.h"
 #include "naucrates/statistics/IStatistics.h"
 #include "gpopt/operators/CExpression.h"
+#include "naucrates/statistics/CJoinStatsProcessor.h"
 
 
 namespace gpnaucrates
@@ -31,7 +32,7 @@ namespace gpnaucrates
 	//		Processor for computing statistics for Inner Join
 	//
 	//---------------------------------------------------------------------------
-	class CInnerJoinStatsProcessor
+	class CInnerJoinStatsProcessor : public CJoinStatsProcessor
 	{
 	private:
 
@@ -52,6 +53,9 @@ namespace gpnaucrates
 						CDouble *pdScaleFactor, // output: scale factor based on the join
 						BOOL fEmptyInput // if true, one of the inputs is empty
 				);
+		// inner join with another stats structure
+		static
+		CStatistics *PstatsInnerJoinStatic(IMemoryPool *pmp, const IStatistics *pistatsOuter, const IStatistics *pistatsInner, DrgPstatspredjoin *pdrgpstatspredjoin);
 	};
 }
 

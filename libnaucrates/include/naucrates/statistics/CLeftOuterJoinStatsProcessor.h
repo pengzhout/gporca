@@ -12,6 +12,7 @@
 #define GPNAUCRATES_CLeftOuterJoinStatsProcessor_H
 
 #include "gpos/base.h"
+#include "naucrates/statistics/CJoinStatsProcessor.h"
 #include "naucrates/statistics/CStatsPredJoin.h"
 #include "naucrates/statistics/IStatistics.h"
 #include "gpopt/operators/CExpression.h"
@@ -31,27 +32,38 @@ namespace gpnaucrates
 	//		Processor for computing statistics for Left Outer Join
 	//
 	//---------------------------------------------------------------------------
-	class CLeftOuterJoinStatsProcessor
+	class CLeftOuterJoinStatsProcessor : public CJoinStatsProcessor
 	{
 	private:
-
-	public:
-
-		// helper for inner-joining histograms
+		// create a new hash map of histograms from the results of the inner join and the histograms of the outer child
 		static
-		void JoinHistograms
+		HMUlHist *PhmulhistLOJ
 				(
 						IMemoryPool *pmp,
-						const CHistogram *phist1,
-						const CHistogram *phist2,
-						CStatsPredJoin *pstatsjoin,
-						CDouble dRows1,
-						CDouble dRows2,
-						CHistogram **pphist1, // output: histogram 1 after join
-						CHistogram **pphist2, // output: histogram 2 after join
-						CDouble *pdScaleFactor, // output: scale factor based on the join
-						BOOL fEmptyInput // if true, one of the inputs is empty
+						const CStatistics *pstatsOuter,
+						const CStatistics *pstatsInner,
+						CStatistics *pstatsInnerJoin,
+						DrgPstatspredjoin *pdrgpstatspredjoin,
+						CDouble dRowsInnerJoin,
+						CDouble *pdRowsLASJ
 				);
+		// helper method to add histograms of the inner side of a LOJ
+		static
+		void AddHistogramsLOJInner
+				(
+						IMemoryPool *pmp,
+						const CStatistics *pstatsInnerJoin,
+						DrgPul *pdrgpulInnerColId,
+						CDouble dRowsLASJ,
+						CDouble dRowsInnerJoin,
+						HMUlHist *phmulhistLOJ
+				);
+
+	public:
+		static
+		CStatistics *PstatsLOJStatic(IMemoryPool *pmp, const IStatistics *pstatsOuter, const IStatistics *pstatsInner, DrgPstatspredjoin *pdrgpstatspredjoin);
+
+
 	};
 }
 
