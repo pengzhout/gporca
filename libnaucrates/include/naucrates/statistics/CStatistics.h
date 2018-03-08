@@ -124,36 +124,12 @@ namespace gpnaucrates
 			static
 			void CapNDVs(CDouble dRows, HMUlHist *phmulhist);
 
-			// create a new hash map of histograms from the results of the inner join and the histograms of the outer child
-			static
-			HMUlHist *PhmulhistLOJ
-						(
-						IMemoryPool *pmp,
-						const CStatistics *pstatsOuter,
-						const CStatistics *pstatsInner,
-						CStatistics *pstatsInnerJoin,
-						DrgPstatspredjoin *pdrgpstatspredjoin,
-						CDouble dRowsInnerJoin,
-						CDouble *pdRowsLASJ
-						);
-
-
 
 			// helper method to add histograms where the column ids have been remapped
 			static
 			void AddHistogramsWithRemap(IMemoryPool *pmp, HMUlHist *phmulhistSrc, HMUlHist *phmulhistDest, HMUlCr *phmulcr, BOOL fMustExist);
 
-			// helper method to add histograms of the inner side of a LOJ
-			static
-			void AddHistogramsLOJInner
-				(
-				IMemoryPool *pmp,
-				const CStatistics *pstatsInnerJoin,
-				DrgPul *pdrgpulInnerColId,
-				CDouble dRowsLASJ,
-				CDouble dRowsInnerJoin,
-				HMUlHist *phmulhistLOJ
-				);
+
 
 		public:
 
@@ -377,7 +353,10 @@ namespace gpnaucrates
 			{
 				return m_ulNumPredicates;
 			}
-
+			CStatisticsConfig *PStatsConf() const
+			{
+				return	m_pstatsconf;
+			}
 
 			DrgPubndvs *Pdrgundv() const
 			{
