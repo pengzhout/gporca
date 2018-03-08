@@ -481,69 +481,6 @@ CStatistics::FEmptyJoinInput
 }
 
 
-//	return statistics object after performing LOJ operation with another statistics structure
-CStatistics *
-CStatistics::PstatsLOJ
-	(
-	IMemoryPool *pmp,
-	const IStatistics *pstatsOther,
-	DrgPstatspredjoin *pdrgpstatspredjoin
-	)
-	const
-{
-	GPOS_ASSERT(NULL != pstatsOther);
-	GPOS_ASSERT(NULL != pdrgpstatspredjoin);
-
-	CStatistics *pstatsInnerJoin = PstatsInnerJoin(pmp, pstatsOther, pdrgpstatspredjoin);
-	CDouble dRowsInnerJoin = pstatsInnerJoin->DRows();
-	CDouble dRowsLASJ(1.0);
-
-	const CStatistics *pstatsInnerSide = dynamic_cast<const CStatistics *> (pstatsOther);
-
-	// create a new hash map of histograms, for each column from the outer child
-	// add the buckets that do not contribute to the inner join
-	HMUlHist *phmulhistLOJ = PhmulhistLOJ
-								(
-								pmp,
-								this,
-								pstatsInnerSide,
-								pstatsInnerJoin,
-								pdrgpstatspredjoin,
-								dRowsInnerJoin,
-								&dRowsLASJ
-								);
-
-	HMUlDouble *phmuldoubleWidth = GPOS_NEW(pmp) HMUlDouble(pmp);
-	CStatisticsUtils::AddWidthInfo(pmp, pstatsInnerJoin->m_phmuldoubleWidth, phmuldoubleWidth);
-
-	pstatsInnerJoin->Release();
-
-	// cardinality of LOJ is at least the cardinality of the outer child
-	CDouble dRowsLOJ = std::max(DRows(), dRowsInnerJoin + dRowsLASJ);
-
-	// create an output stats object
-	CStatistics *pstatsLOJ = GPOS_NEW(pmp) CStatistics
-										(
-										pmp,
-										phmulhistLOJ,
-										phmuldoubleWidth,
-										dRowsLOJ,
-										FEmpty(),
-										m_ulNumPredicates
-										);
-
-	// In the output statistics object, the upper bound source cardinality of the join column
-	// cannot be greater than the upper bound source cardinality information maintained in the input
-	// statistics object. Therefore we choose CStatistics::EcbmMin the bounding method which takes
-	// the minimum of the cardinality upper bound of the source column (in the input hash map)
-	// and estimated join cardinality.
-
-	// modify source id to upper bound card information
-	ComputeCardUpperBounds(pmp, pstatsLOJ, dRowsLOJ, CStatistics::EcbmMin /* ecbm */);
-	pstatsInnerSide->ComputeCardUpperBounds(pmp, pstatsLOJ, dRowsLOJ, CStatistics::EcbmMin /* ecbm */);
-
-	return pstatsLOJ;
-}
 
 //	create a new hash map of histograms for LOJ from the histograms
 //	of the outer child and the histograms of the inner join

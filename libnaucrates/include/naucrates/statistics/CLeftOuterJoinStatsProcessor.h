@@ -55,6 +55,13 @@ namespace gpnaucrates
 						CDouble *pdScaleFactor, // output: scale factor based on the join
 						BOOL fEmptyInput // if true, one of the inputs is empty
 				);
+
+
+		// LOJ with another stats structure
+		static
+		CStatistics *PstatsLOJ(IMemoryPool *pmp, const IStatistics *pistatsOuter, const IStatistics *pistatsInner, DrgPstatspredjoin *pdrgpstatspredjoin);
+
+
 	};
 }
 

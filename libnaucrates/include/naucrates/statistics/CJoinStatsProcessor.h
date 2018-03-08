@@ -48,17 +48,6 @@ namespace gpnaucrates
 						IStatistics::EStatsJoinType esjt
 				);
 
-		// for the output stats object, compute its upper bound cardinality mapping based on the bounding method
-		// estimated output cardinality and information maintained in the current stats object
-		static
-		void ComputeCardUpperBounds
-				(
-						IMemoryPool *pmp, // memory pool
-						const CStatistics *pstatsInput,
-						CStatistics *pstatsOutput, // output statistics object that is to be updated
-						CDouble dRowsOutput, // estimated output cardinality of the operator
-						CStatistics::ECardBoundingMethod ecbm // technique used to estimate max source cardinality in the output stats object
-				);
 
 		//	check if the join statistics object is empty output based on the input
 		//	histograms and the join histograms
@@ -74,6 +63,20 @@ namespace gpnaucrates
 				);
 
 	public:
+
+
+		// for the output stats object, compute its upper bound cardinality mapping based on the bounding method
+		// estimated output cardinality and information maintained in the current stats object
+		// TODO: Melanie -- making it public for now so LOJ processor can use it...please fixme
+		static
+		void ComputeCardUpperBounds
+				(
+						IMemoryPool *pmp, // memory pool
+						const CStatistics *pstatsInput,
+						CStatistics *pstatsOutput, // output statistics object that is to be updated
+						CDouble dRowsOutput, // estimated output cardinality of the operator
+						CStatistics::ECardBoundingMethod ecbm // technique used to estimate max source cardinality in the output stats object
+				);
 
 		// main driver to generate join stats
 		static

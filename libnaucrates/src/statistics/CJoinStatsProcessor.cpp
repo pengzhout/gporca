@@ -308,6 +308,8 @@ CJoinStatsProcessor::DJoinCardinality
 //	for the output statistics object, compute its upper bound cardinality
 // 	mapping based on the bounding method estimated output cardinality
 //  and information maintained in the current statistics object
+// TODO: Melanie this is a duplicate of the one in CStatistics. Where else do we use it except join?
+
 void
 CJoinStatsProcessor::ComputeCardUpperBounds
 		(

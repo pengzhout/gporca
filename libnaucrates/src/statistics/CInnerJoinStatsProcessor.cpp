@@ -85,15 +85,9 @@ CInnerJoinStatsProcessor::PstatsJoinArray
 						&pstatspredUnsupported
 				);
 		IStatistics *pstatsNew = NULL;
-		if (fOuterJoin)
-		{
-			pstatsNew = pstats->PstatsLOJ(pmp, pstatsCurrent, pdrgpstatspredjoin);
-		}
-		else
-		{
+		GPOS_ASSERT(!fOuterJoin);
 
-			pstatsNew = pstats->PstatsInnerJoin(pmp, pstatsCurrent, pdrgpstatspredjoin);
-		}
+		pstatsNew = pstats->PstatsInnerJoin(pmp, pstatsCurrent, pdrgpstatspredjoin);
 		pstats->Release();
 		pstats = pstatsNew;
 

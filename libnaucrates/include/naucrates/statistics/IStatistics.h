@@ -161,16 +161,6 @@ namespace gpnaucrates
 						)
 						const = 0;
 
-			// LOJ with another stats structure
-			virtual
-			IStatistics *PstatsLOJ
-						(
-						IMemoryPool *pmp,
-						const IStatistics *pistatsOther,
-						DrgPstatspredjoin *pdrgpstatspredjoin
-						)
-						const = 0;
-
 			// semi join stats computation
 			virtual
 			IStatistics *PstatsLSJoin

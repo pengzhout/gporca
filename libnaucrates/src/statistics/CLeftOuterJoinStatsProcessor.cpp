@@ -24,6 +24,7 @@
 
 #include "naucrates/statistics/CStatisticsUtils.h"
 #include "naucrates/statistics/CLeftOuterJoinStatsProcessor.h"
+#include "naucrates/statistics/CJoinStatsProcessor.h"
 #include "naucrates/statistics/CStatistics.h"
 #include "naucrates/statistics/CStatsPredUtils.h"
 #include "naucrates/statistics/CStatsPredDisj.h"
@@ -85,15 +86,8 @@ CLeftOuterJoinStatsProcessor::PstatsJoinArray
 						&pstatspredUnsupported
 				);
 		IStatistics *pstatsNew = NULL;
-		if (fOuterJoin)
-		{
-			pstatsNew = pstats->PstatsLOJ(pmp, pstatsCurrent, pdrgpstatspredjoin);
-		}
-		else
-		{
-
-			pstatsNew = pstats->PstatsInnerJoin(pmp, pstatsCurrent, pdrgpstatspredjoin);
-		}
+		GPOS_ASSERT(fOuterJoin);
+		pstatsNew = PstatsLOJ(pmp, pstats, pstatsCurrent, pdrgpstatspredjoin);
 		pstats->Release();
 		pstats = pstatsNew;
 
@@ -227,6 +221,82 @@ CLeftOuterJoinStatsProcessor::JoinHistograms
 	// copy input histograms and use default scale factor
 	*pphist1 = phist1->PhistCopy(pmp);
 	*pphist2 = phist2->PhistCopy(pmp);
+}
+
+
+//	return statistics object after performing LOJ operation with another statistics structure
+CStatistics *
+CLeftOuterJoinStatsProcessor::PstatsLOJ
+		(
+				IMemoryPool *pmp,
+				const IStatistics *pistatsOuter,
+				const IStatistics *pistatsInner,
+				DrgPstatspredjoin *pdrgpstatspredjoin
+		)
+{
+	GPOS_ASSERT(NULL != pistatsOuter);
+	GPOS_ASSERT(NULL != pdrgpstatspredjoin);
+
+	const CStatistics *pstatsOuter = dynamic_cast<const CStatistics *> (pistatsOuter);
+
+	CStatistics *pstatsInnerJoin = CJoinStatsProcessor::PstatsJoinDriver
+			(
+					pmp,
+					pstatsOuter->Pstatsconf(),
+					pistatsOuter,
+					pistatsInner,
+					pdrgpstatspredjoin,
+					IStatistics::EsjtLeftOuterJoin /* esjt */,
+					true /* fIgnoreLasjHistComputation */
+			);
+
+	CDouble dRowsInnerJoin = pstatsInnerJoin->DRows();
+	CDouble dRowsLASJ(1.0);
+
+	const CStatistics *pstatsInner = dynamic_cast<const CStatistics *> (pistatsInner);
+
+	// create a new hash map of histograms, for each column from the outer child
+	// add the buckets that do not contribute to the inner join
+	HMUlHist *phmulhistLOJ = pstatsOuter->PhmulhistLOJ
+			(
+					pmp,
+					pstatsOuter,
+					pstatsInner,
+					pstatsInnerJoin,
+					pdrgpstatspredjoin,
+					dRowsInnerJoin,
+					&dRowsLASJ
+			);
+
+	HMUlDouble *phmuldoubleWidth = GPOS_NEW(pmp) HMUlDouble(pmp);
+	CStatisticsUtils::AddWidthInfo(pmp, pstatsInnerJoin->PHMUlDoubleWidth(), phmuldoubleWidth);
+
+	pstatsInnerJoin->Release();
+
+	// cardinality of LOJ is at least the cardinality of the outer child
+	CDouble dRowsLOJ = std::max(pstatsOuter->DRows(), dRowsInnerJoin + dRowsLASJ);
+
+	// create an output stats object
+	CStatistics *pstatsLOJ = GPOS_NEW(pmp) CStatistics
+			(
+					pmp,
+					phmulhistLOJ,
+					phmuldoubleWidth,
+					dRowsLOJ,
+					pstatsOuter->FEmpty(),
+					pstatsOuter->UlNumberOfPredicates()
+			);
+
+	// In the output statistics object, the upper bound source cardinality of the join column
+	// cannot be greater than the upper bound source cardinality information maintained in the input
+	// statistics object. Therefore we choose CStatistics::EcbmMin the bounding method which takes
+	// the minimum of the cardinality upper bound of the source column (in the input hash map)
+	// and estimated join cardinality.
+
+	// modify source id to upper bound card information
+	CJoinStatsProcessor::ComputeCardUpperBounds(pmp, pstatsInner, pstatsLOJ, dRowsLOJ, CStatistics::EcbmMin /* ecbm */);
+
+	return pstatsLOJ;
 }
 
 // EOF

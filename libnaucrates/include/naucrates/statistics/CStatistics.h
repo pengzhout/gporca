@@ -67,6 +67,20 @@ namespace gpnaucrates
 					EcbmSentinel
 				};
 
+		// create a new hash map of histograms from the results of the inner join and the histograms of the outer child
+		static
+		HMUlHist *PhmulhistLOJ
+				(
+						IMemoryPool *pmp,
+						const CStatistics *pstatsOuter,
+						const CStatistics *pstatsInner,
+						CStatistics *pstatsInnerJoin,
+						DrgPstatspredjoin *pdrgpstatspredjoin,
+						CDouble dRowsInnerJoin,
+						CDouble *pdRowsLASJ
+				);
+
+
 		// helper method to copy stats on columns that are not excluded by bitset
 		// TODO: Melanie & Venky this may not be correct
 		void AddNotExcludedHistograms(IMemoryPool *pmp, CBitSet *pbsExcludedColIds, HMUlHist *phmulhist) const;
@@ -124,18 +138,6 @@ namespace gpnaucrates
 			static
 			void CapNDVs(CDouble dRows, HMUlHist *phmulhist);
 
-			// create a new hash map of histograms from the results of the inner join and the histograms of the outer child
-			static
-			HMUlHist *PhmulhistLOJ
-						(
-						IMemoryPool *pmp,
-						const CStatistics *pstatsOuter,
-						const CStatistics *pstatsInner,
-						CStatistics *pstatsInnerJoin,
-						DrgPstatspredjoin *pdrgpstatspredjoin,
-						CDouble dRowsInnerJoin,
-						CDouble *pdRowsLASJ
-						);
 
 
 
@@ -256,9 +258,6 @@ namespace gpnaucrates
 			virtual
 			CStatistics *PstatsInnerJoin(IMemoryPool *pmp, const IStatistics *pistatsOther, DrgPstatspredjoin *pdrgpstatspredjoin) const;
 
-			// LOJ with another stats structure
-			virtual
-			CStatistics *PstatsLOJ(IMemoryPool *pmp, const IStatistics *pistatsOther, DrgPstatspredjoin *pdrgpstatspredjoin) const;
 
 			// left anti semi join with another stats structure
 			virtual
@@ -378,11 +377,16 @@ namespace gpnaucrates
 				return m_ulNumPredicates;
 			}
 
+			CStatisticsConfig *Pstatsconf() const
+			{
+				return m_pstatsconf;
+			}
 
 			DrgPubndvs *Pdrgundv() const
 			{
 				return m_pdrgpubndvs;
 			}
+
 			// create an empty statistics object
 			static
 			CStatistics *PstatsEmpty

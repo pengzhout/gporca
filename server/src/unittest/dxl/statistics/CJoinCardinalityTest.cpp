@@ -19,6 +19,7 @@
 #include "gpos/string/CWStringDynamic.h"
 
 #include "naucrates/statistics/CStatisticsUtils.h"
+#include "naucrates/statistics/CLeftOuterJoinStatsProcessor.h"
 
 #include "naucrates/dxl/CDXLUtils.h"
 
@@ -231,7 +232,7 @@ CJoinCardinalityTest::EresUnittest_Join()
 		CStatistics *pstatsOutput = NULL;
 		if (fLeftOuterJoin)
 		{
-			pstatsOutput = pstats1->PstatsLOJ(pmp, pstats2, pdrgpstatspredjoin);
+			pstatsOutput = CLeftOuterJoinStatsProcessor::PstatsLOJ(pmp, pstats1, pstats2, pdrgpstatspredjoin);
 		}
 		else
 		{
