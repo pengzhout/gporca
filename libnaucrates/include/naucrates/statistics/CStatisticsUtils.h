@@ -348,9 +348,7 @@ namespace gpnaucrates
 				DrgPstat *pdrgpstatOuter
 				);
 
-			// derive statistics for the given join predicate
-			static
-			IStatistics *PstatsJoinArray(IMemoryPool *pmp, BOOL fOuterJoin, DrgPstat *pdrgpstat, CExpression *pexprScalar);
+
 
 			// derive statistics for join operation given array of statistics object
 			static

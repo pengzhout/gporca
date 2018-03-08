@@ -23,6 +23,7 @@
 #include "gpopt/optimizer/COptimizerConfig.h"
 
 #include "naucrates/statistics/CStatisticsUtils.h"
+#include "naucrates/statistics/CInnerJoinStatsProcessor.h"
 #include "naucrates/statistics/CStatistics.h"
 #include "naucrates/statistics/CStatsPredUtils.h"
 #include "naucrates/statistics/CStatsPredDisj.h"
@@ -1145,7 +1146,7 @@ CStatisticsUtils::PstatsDeriveWithOuterRefs
 
 	// join outer stats object based on given scalar expression,
 	// we use inner join semantics here to consider all relevant combinations of outer tuples
-	IStatistics *pstatsOuter = PstatsJoinArray(pmp, false /*fOuterJoin*/, pdrgpstatOuter, pexprScalar);
+	IStatistics *pstatsOuter = CInnerJoinStatsProcessor::PstatsJoinArray(pmp, false /*fOuterJoin*/, pdrgpstatOuter, pexprScalar);
 	CDouble dRowsOuter = pstatsOuter->DRows();
 
 	// join passed stats object and outer stats based on the passed join type
@@ -1153,7 +1154,7 @@ CStatisticsUtils::PstatsDeriveWithOuterRefs
 	pdrgpstat->Append(pstatsOuter);
 	pstats->AddRef();
 	pdrgpstat->Append(pstats);
-	IStatistics *pstatsJoined = PstatsJoinArray(pmp, fOuterJoin, pdrgpstat, pexprScalar);
+	IStatistics *pstatsJoined = CInnerJoinStatsProcessor::PstatsJoinArray(pmp, fOuterJoin, pdrgpstat, pexprScalar);
 	pdrgpstat->Release();
 
 	// scale result using cardinality of outer stats and set number of rebinds of returned stats
@@ -1214,102 +1215,6 @@ CStatisticsUtils::PstatsFilter
 }
 
 
-//---------------------------------------------------------------------------
-//	@function:
-//		CStatisticsUtils::PstatsJoinArray
-//
-//	@doc:
-//		Derive statistics for the given join predicate
-//
-//---------------------------------------------------------------------------
-IStatistics *
-CStatisticsUtils::PstatsJoinArray
-	(
-	IMemoryPool *pmp,
-	BOOL fOuterJoin,
-	DrgPstat *pdrgpstat,
-	CExpression *pexprScalar
-	)
-{
-	GPOS_ASSERT(NULL != pexprScalar);
-	GPOS_ASSERT(NULL != pdrgpstat);
-	GPOS_ASSERT(0 < pdrgpstat->UlLength());
-	GPOS_ASSERT_IMP(fOuterJoin, 2 == pdrgpstat->UlLength());
-
-	// create an empty set of outer references for statistics derivation
-	CColRefSet *pcrsOuterRefs = GPOS_NEW(pmp) CColRefSet(pmp);
-
-	// join statistics objects one by one using relevant predicates in given scalar expression
-	const ULONG ulStats = pdrgpstat->UlLength();
-	IStatistics *pstats = (*pdrgpstat)[0]->PstatsCopy(pmp);
-	CDouble dRowsOuter = pstats->DRows();
-
-	for (ULONG ul = 1; ul < ulStats; ul++)
-	{
-		IStatistics *pstatsCurrent = (*pdrgpstat)[ul];
-
-		DrgPcrs *pdrgpcrsOutput= GPOS_NEW(pmp) DrgPcrs(pmp);
-		pdrgpcrsOutput->Append(pstats->Pcrs(pmp));
-		pdrgpcrsOutput->Append(pstatsCurrent->Pcrs(pmp));
-
-		CStatsPred *pstatspredUnsupported = NULL;
-		DrgPstatspredjoin *pdrgpstatspredjoin = CStatsPredUtils::PdrgpstatspredjoinExtract
-															(
-															pmp,
-															pexprScalar,
-															pdrgpcrsOutput,
-															pcrsOuterRefs,
-															&pstatspredUnsupported
-															);
-		IStatistics *pstatsNew = NULL;
-		if (fOuterJoin)
-		{
-			pstatsNew = pstats->PstatsLOJ(pmp, pstatsCurrent, pdrgpstatspredjoin);
-		}
-		else
-		{
-			pstatsNew = pstats->PstatsInnerJoin(pmp, pstatsCurrent, pdrgpstatspredjoin);
-		}
-		pstats->Release();
-		pstats = pstatsNew;
-
-		if (NULL != pstatspredUnsupported)
-		{
-			// apply the unsupported join filters as a filter on top of the join results.
-			// TODO,  June 13 2014 we currently only cap NDVs for filters
-			// immediately on top of tables.
-			IStatistics *pstatsAfterJoinFilter = pstats->PstatsFilter
-															(
-															pmp,
-															pstatspredUnsupported,
-															false /* fCapNdvs */
-															);
-
-			// If it is outer join and the cardinality after applying the unsupported join
-			// filters is less than the cardinality of outer child, we don't use this stats.
-			// Because we need to make sure that Card(LOJ) >= Card(Outer child of LOJ).
-			if (fOuterJoin && pstatsAfterJoinFilter->DRows() < dRowsOuter)
-			{
-				pstatsAfterJoinFilter->Release();
-			}
-			else
-			{
-				pstats->Release();
-				pstats = pstatsAfterJoinFilter;
-			}
-
-			pstatspredUnsupported->Release();
-		}
-
-		pdrgpstatspredjoin->Release();
-		pdrgpcrsOutput->Release();
-	}
-
-	// clean up
-	pcrsOuterRefs->Release();
-
-	return pstats;
-}
 
 
 //---------------------------------------------------------------------------
@@ -1344,7 +1249,7 @@ CStatisticsUtils::PstatsJoinWithOuterRefs
 	BOOL fOuterJoin = (COperator::EopLogicalLeftOuterJoin == eopid);
 
 	// derive stats based on local join condition
-	IStatistics *pstatsResult = PstatsJoinArray(pmp, fOuterJoin, pdrgpstatChildren, pexprScalarLocal);
+	IStatistics *pstatsResult = CInnerJoinStatsProcessor::PstatsJoinArray(pmp, fOuterJoin, pdrgpstatChildren, pexprScalarLocal);
 
 	if (exprhdl.FHasOuterRefs() && 0 < pdrgpstatOuter->UlLength())
 	{

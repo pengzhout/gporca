@@ -145,6 +145,12 @@ namespace gpnaucrates
 			virtual
 			IStatistics *PstatsFilter(IMemoryPool *, CStatsPred *pstatspred, BOOL fCapNdvs) const = 0;
 
+			virtual
+			HMUlDouble *PHashMapUlDoubleWidth() const = 0;
+
+			virtual
+			ULONG UlNumberOfPredicates() const = 0;
+
 			// inner join with another stats structure
 			virtual
 			IStatistics *PstatsInnerJoin
