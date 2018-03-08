@@ -481,29 +481,6 @@ CStatistics::FEmptyJoinInput
 }
 
 
-// check if the join statistics object is empty output based on the input
-// histograms and the join histograms
-BOOL
-CStatistics::FEmptyJoinStats
-	(
-	BOOL fEmptyOuter,
-	BOOL fEmptyOutput,
-	BOOL fLASJ,
-	const CHistogram *phistOuter,
-	const CHistogram *phistInner,
-	CHistogram *phistJoin
-	)
-{
-	GPOS_ASSERT(NULL != phistOuter);
-	GPOS_ASSERT(NULL != phistInner);
-	GPOS_ASSERT(NULL != phistJoin);
-
-	return fEmptyOutput ||
-		   (!fLASJ && fEmptyOuter) ||
-		   (!phistOuter->FEmpty() && !phistInner->FEmpty() && phistJoin->FEmpty());
-	}
-
-
 //	return statistics object after performing LOJ operation with another statistics structure
 CStatistics *
 CStatistics::PstatsLOJ
@@ -537,7 +514,7 @@ CStatistics::PstatsLOJ
 								);
 
 	HMUlDouble *phmuldoubleWidth = GPOS_NEW(pmp) HMUlDouble(pmp);
-	CStatistics::AddWidthInfo(pmp, pstatsInnerJoin->m_phmuldoubleWidth, phmuldoubleWidth);
+	CStatisticsUtils::AddWidthInfo(pmp, pstatsInnerJoin->m_phmuldoubleWidth, phmuldoubleWidth);
 
 	pstatsInnerJoin->Release();
 
@@ -1023,31 +1000,6 @@ CStatistics::AddNotExcludedHistograms
 	}
 }
 
-//	add width information
-void
-CStatistics::AddWidthInfo
-	(
-	IMemoryPool *pmp,
-	HMUlDouble *phmuldoubleSrc,
-	HMUlDouble *phmuldoubleDest
-	)
-{
-	HMIterUlDouble hmiteruldouble(phmuldoubleSrc);
-	while (hmiteruldouble.FAdvance())
-	{
-		ULONG ulColId = *(hmiteruldouble.Pk());
-		BOOL fPresent = (NULL != phmuldoubleDest->PtLookup(&ulColId));
-		if (!fPresent)
-		{
-			const CDouble *pdWidth = hmiteruldouble.Pt();
-			CDouble *pdWidthCopy = GPOS_NEW(pmp) CDouble(*pdWidth);
-			phmuldoubleDest->FInsert(GPOS_NEW(pmp) ULONG(ulColId), pdWidthCopy);
-		}
-
-		GPOS_CHECK_ABORT;
-	}
-}
-
 // return statistics object after union all operation with input statistics object
 CStatistics *
 CStatistics::PstatsUnionAll
@@ -1241,7 +1193,7 @@ CStatistics::AppendStats
 	CHistogramUtils::AddHistograms(pmp, pstats->m_phmulhist, m_phmulhist);
 	GPOS_CHECK_ABORT;
 
-	AddWidthInfo(pmp, pstats->m_phmuldoubleWidth, m_phmuldoubleWidth);
+	CStatisticsUtils::AddWidthInfo(pmp, pstats->m_phmuldoubleWidth, m_phmuldoubleWidth);
 	GPOS_CHECK_ABORT;
 }
 
@@ -1271,7 +1223,7 @@ CStatistics::PstatsScale
 	CHistogramUtils::AddHistograms(pmp, m_phmulhist, phmulhistNew);
 	GPOS_CHECK_ABORT;
 
-	AddWidthInfo(pmp, m_phmuldoubleWidth, phmuldoubleNew);
+	CStatisticsUtils::AddWidthInfo(pmp, m_phmuldoubleWidth, phmuldoubleNew);
 	GPOS_CHECK_ABORT;
 
 	CDouble dRowsScaled = m_dRows * dFactor;
@@ -1314,7 +1266,7 @@ CStatistics::PstatsCopyWithRemap
 	HMUlDouble *phmuldoubleNew = GPOS_NEW(pmp) HMUlDouble(pmp);
 
 	AddHistogramsWithRemap(pmp, m_phmulhist, phmulhistNew, phmulcr, fMustExist);
-	AddWidthInfoWithRemap(pmp, m_phmuldoubleWidth, phmuldoubleNew, phmulcr, fMustExist);
+	CStatisticsUtils::AddWidthInfoWithRemap(pmp, m_phmuldoubleWidth, phmuldoubleNew, phmulcr, fMustExist);
 
 	// create a copy of the stats object
 	CStatistics *pstatsCopy = GPOS_NEW(pmp) CStatistics
@@ -1419,45 +1371,6 @@ CStatistics::AddHistogramsWithRemap
 		if (NULL != phistSrc)
 		{
 			CStatisticsUtils::AddHistogram(pmp, ulColIdDest, phistSrc, phmulhistDest);
-		}
-	}
-}
-
-// add width information where the column ids have been re-mapped
-void
-CStatistics::AddWidthInfoWithRemap
-	(
-	IMemoryPool *pmp,
-	HMUlDouble *phmuldoubleSrc,
-	HMUlDouble *phmuldoubleDest,
-	HMUlCr *phmulcr,
-	BOOL fMustExist
-	)
-{
-	HMIterUlDouble hmiteruldouble(phmuldoubleSrc);
-	while (hmiteruldouble.FAdvance())
-	{
-		ULONG ulColId = *(hmiteruldouble.Pk());
-		CColRef *pcrNew = phmulcr->PtLookup(&ulColId);
-		if (fMustExist && NULL == pcrNew)
-		{
-			continue;
-		}
-
-		if (NULL != pcrNew)
-		{
-			ulColId = pcrNew->UlId();
-		}
-
-		if (NULL == phmuldoubleDest->PtLookup(&ulColId))
-		{
-			const CDouble *pdWidth = hmiteruldouble.Pt();
-			CDouble *pdWidthCopy = GPOS_NEW(pmp) CDouble(*pdWidth);
-#ifdef GPOS_DEBUG
-			BOOL fResult =
-#endif // GPOS_DEBUG
-			phmuldoubleDest->FInsert(GPOS_NEW(pmp) ULONG(ulColId), pdWidthCopy);
-			GPOS_ASSERT(fResult);
 		}
 	}
 }

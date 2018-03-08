@@ -60,6 +60,19 @@ namespace gpnaucrates
 						CStatistics::ECardBoundingMethod ecbm // technique used to estimate max source cardinality in the output stats object
 				);
 
+		//	check if the join statistics object is empty output based on the input
+		//	histograms and the join histograms
+		static
+		BOOL FEmptyJoinStats
+				(
+						BOOL fEmptyOuter,
+						BOOL fEmptyOutput,
+						BOOL fLASJ,
+						const CHistogram *phistOuter,
+						const CHistogram *phistInner,
+						CHistogram *phistJoin
+				);
+
 	public:
 
 		// main driver to generate join stats

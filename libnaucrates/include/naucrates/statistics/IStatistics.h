@@ -146,7 +146,7 @@ namespace gpnaucrates
 			IStatistics *PstatsFilter(IMemoryPool *, CStatsPred *pstatspred, BOOL fCapNdvs) const = 0;
 
 			virtual
-			HMUlDouble *PHashMapUlDoubleWidth() const = 0;
+			HMUlDouble *PHMUlDoubleWidth() const = 0;
 
 			virtual
 			ULONG UlNumberOfPredicates() const = 0;

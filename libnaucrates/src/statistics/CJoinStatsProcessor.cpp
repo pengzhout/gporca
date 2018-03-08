@@ -184,9 +184,8 @@ CJoinStatsProcessor::PstatsJoinDriver
 						fIgnoreLasjHistComputation
 				);
 
-		fEmptyOutput = CStatistics::FEmptyJoinStats(pstatsOuter->FEmpty(), fEmptyOutput, fLASJ, phistOuter, phistInner, phistOuterAfter);
+		fEmptyOutput = FEmptyJoinStats(pstatsOuter->FEmpty(), fEmptyOutput, fLASJ, phistOuter, phistInner, phistOuterAfter);
 
-		// TODO: consider if we should drop the buckets of the histogram in the case of an unsupported predicate
 		CStatisticsUtils::AddHistogram(pmp, ulColId1, phistOuterAfter, phmulhistJoin);
 		if (!fSemiJoin)
 		{
@@ -210,10 +209,10 @@ CJoinStatsProcessor::PstatsJoinDriver
 	pbsJoinColIds->Release();
 
 	HMUlDouble *phmuldoubleWidthResult = GPOS_NEW(pmp) HMUlDouble(pmp);
-	CStatistics::AddWidthInfo(pmp, pstatsOuter->PHashMapUlDoubleWidth(), phmuldoubleWidthResult);
+	CStatisticsUtils::AddWidthInfo(pmp, pstatsOuter->PHMUlDoubleWidth(), phmuldoubleWidthResult);
 	if (!fSemiJoin)
 	{
-		CStatistics::AddWidthInfo(pmp, pstatsInner->PHashMapUlDoubleWidth(), phmuldoubleWidthResult);
+		CStatisticsUtils::AddWidthInfo(pmp, pstatsInner->PHMUlDoubleWidth(), phmuldoubleWidthResult);
 	}
 
 	// make a new unsupported join stats class
@@ -322,5 +321,26 @@ CJoinStatsProcessor::ComputeCardUpperBounds
 	}
 }
 
+// check if the join statistics object is empty output based on the input
+// histograms and the join histograms
+BOOL
+CJoinStatsProcessor::FEmptyJoinStats
+		(
+				BOOL fEmptyOuter,
+				BOOL fEmptyOutput,
+				BOOL fLASJ,
+				const CHistogram *phistOuter,
+				const CHistogram *phistInner,
+				CHistogram *phistJoin
+		)
+{
+	GPOS_ASSERT(NULL != phistOuter);
+	GPOS_ASSERT(NULL != phistInner);
+	GPOS_ASSERT(NULL != phistJoin);
+
+	return fEmptyOutput ||
+		   (!fLASJ && fEmptyOuter) ||
+		   (!phistOuter->FEmpty() && !phistInner->FEmpty() && phistJoin->FEmpty());
+}
 
 // EOF

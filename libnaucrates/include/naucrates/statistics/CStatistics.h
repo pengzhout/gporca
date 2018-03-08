@@ -66,23 +66,7 @@ namespace gpnaucrates
 
 					EcbmSentinel
 				};
-		// helper method to add width information
-		static
-		void AddWidthInfo(IMemoryPool *pmp, HMUlDouble *phmuldoubleSrc, HMUlDouble *phmuldoubleDest);
 
-		//	check if the join statistics object is empty output based on the input
-		//	histograms and the join histograms
-		// TODO: Melanie & Venky clean this and caller API
-		static
-		BOOL FEmptyJoinStats
-				(
-						BOOL fEmptyOuter,
-						BOOL fEmptyOutput,
-						BOOL fLASJ,
-						const CHistogram *phistOuter,
-						const CHistogram *phistInner,
-						CHistogram *phistJoin
-				);
 		// helper method to copy stats on columns that are not excluded by bitset
 		// TODO: Melanie & Venky this may not be correct
 		void AddNotExcludedHistograms(IMemoryPool *pmp, CBitSet *pbsExcludedColIds, HMUlHist *phmulhist) const;
@@ -171,11 +155,6 @@ namespace gpnaucrates
 				HMUlHist *phmulhistLOJ
 				);
 
-			// helper method to add width information where the column ids have been remapped
-			static
-			void AddWidthInfoWithRemap(IMemoryPool *pmp, HMUlDouble *phmuldoubleSrc, HMUlDouble *phmuldoubleDest, HMUlCr *phmulcr, BOOL fMustExist);
-
-
 		public:
 
 			// ctor
@@ -193,14 +172,11 @@ namespace gpnaucrates
 			virtual
 			~CStatistics();
 
-			// TODO: Melanie & Venky clean this up
-		virtual
-		HMUlDouble *
-		PHashMapUlDoubleWidth() const
-		{
-
-			return m_phmuldoubleWidth;
-		}
+			virtual
+			HMUlDouble *PHMUlDoubleWidth() const
+			{
+				return m_phmuldoubleWidth;
+			}
 
 		// actual number of rows
 			virtual

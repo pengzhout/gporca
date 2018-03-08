@@ -1214,9 +1214,6 @@ CStatisticsUtils::PstatsFilter
 	return pstatsResult;
 }
 
-
-
-
 //---------------------------------------------------------------------------
 //	@function:
 //		CStatisticsUtils::PstatsJoinWithOuterRefs
@@ -2146,6 +2143,70 @@ CStatisticsUtils::DDefaultColumnWidth
        }
 
        return dWidth;
+}
+
+//	add width information
+void
+CStatisticsUtils::AddWidthInfo
+		(
+				IMemoryPool *pmp,
+				HMUlDouble *phmuldoubleSrc,
+				HMUlDouble *phmuldoubleDest
+		)
+{
+	HMIterUlDouble hmiteruldouble(phmuldoubleSrc);
+	while (hmiteruldouble.FAdvance())
+	{
+		ULONG ulColId = *(hmiteruldouble.Pk());
+		BOOL fPresent = (NULL != phmuldoubleDest->PtLookup(&ulColId));
+		if (!fPresent)
+		{
+			const CDouble *pdWidth = hmiteruldouble.Pt();
+			CDouble *pdWidthCopy = GPOS_NEW(pmp) CDouble(*pdWidth);
+			phmuldoubleDest->FInsert(GPOS_NEW(pmp) ULONG(ulColId), pdWidthCopy);
+		}
+
+		GPOS_CHECK_ABORT;
+	}
+}
+
+// add width information where the column ids have been re-mapped
+void
+CStatisticsUtils::AddWidthInfoWithRemap
+		(
+				IMemoryPool *pmp,
+				HMUlDouble *phmuldoubleSrc,
+				HMUlDouble *phmuldoubleDest,
+				HMUlCr *phmulcr,
+				BOOL fMustExist
+		)
+{
+	HMIterUlDouble hmiteruldouble(phmuldoubleSrc);
+	while (hmiteruldouble.FAdvance())
+	{
+		ULONG ulColId = *(hmiteruldouble.Pk());
+		CColRef *pcrNew = phmulcr->PtLookup(&ulColId);
+		if (fMustExist && NULL == pcrNew)
+		{
+			continue;
+		}
+
+		if (NULL != pcrNew)
+		{
+			ulColId = pcrNew->UlId();
+		}
+
+		if (NULL == phmuldoubleDest->PtLookup(&ulColId))
+		{
+			const CDouble *pdWidth = hmiteruldouble.Pt();
+			CDouble *pdWidthCopy = GPOS_NEW(pmp) CDouble(*pdWidth);
+#ifdef GPOS_DEBUG
+			BOOL fResult =
+#endif // GPOS_DEBUG
+					phmuldoubleDest->FInsert(GPOS_NEW(pmp) ULONG(ulColId), pdWidthCopy);
+			GPOS_ASSERT(fResult);
+		}
+	}
 }
 
 // EOF

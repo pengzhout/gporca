@@ -454,6 +454,14 @@ namespace gpnaucrates
 			static
 			CDouble DDefaultColumnWidth(const IMDType *pmdtype);
 
+			// helper method to add width information
+			static
+			void AddWidthInfo(IMemoryPool *pmp, HMUlDouble *phmuldoubleSrc, HMUlDouble *phmuldoubleDest);
+
+			// helper method to add width information where the column ids have been remapped
+			static
+			void AddWidthInfoWithRemap(IMemoryPool *pmp, HMUlDouble *phmuldoubleSrc, HMUlDouble *phmuldoubleDest, HMUlCr *phmulcr, BOOL fMustExist);
+
 	}; // class CStatisticsUtils
 
 	// comparison function for sorting MCVs
