@@ -22,6 +22,7 @@
 #include "naucrates/statistics/CBucket.h"
 #include "naucrates/statistics/CHistogram.h"
 #include "naucrates/statistics/CStatistics.h"
+#include "naucrates/statistics/CInnerJoinStatsProcessor.h"
 #include "naucrates/statistics/CStatisticsUtils.h"
 
 #include "naucrates/base/CDatumGenericGPDB.h"
@@ -1618,7 +1619,7 @@ CStatisticsTest::EresUnittest_CStatisticsBasic()
 	CStatsPredJoin *pstatspredjoin = GPOS_NEW(pmp) CStatsPredJoin(2, CStatsPred::EstatscmptEq, 10);
 	DrgPstatspredjoin *pdrgpstatspredjoin = GPOS_NEW(pmp) DrgPstatspredjoin(pmp);
 	pdrgpstatspredjoin->Append(pstatspredjoin);
-	CStatistics *pstats3 = pstats->PstatsInnerJoin(pmp, pstats2, pdrgpstatspredjoin);
+	CStatistics *pstats3 = CInnerJoinStatsProcessor::PstatsInnerJoin(pmp, pstats, pstats2, pdrgpstatspredjoin);
 
 	GPOS_TRACE(GPOS_WSZ_LIT("pstats3 = pstats JOIN pstats2 on (col2 = col10)"));
 	// after stats

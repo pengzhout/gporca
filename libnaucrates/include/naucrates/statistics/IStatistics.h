@@ -151,15 +151,7 @@ namespace gpnaucrates
 			virtual
 			ULONG UlNumberOfPredicates() const = 0;
 
-			// inner join with another stats structure
-			virtual
-			IStatistics *PstatsInnerJoin
-						(
-						IMemoryPool *pmp,
-						const IStatistics *pistatsOther,
-						DrgPstatspredjoin *pdrgpstatspredjoin
-						)
-						const = 0;
+
 
 			// semi join stats computation
 			virtual

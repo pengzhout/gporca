@@ -673,30 +673,7 @@ CStatistics::PstatsLSJoin
 
 
 
-// return statistics object after performing inner join
-CStatistics *
-CStatistics::PstatsInnerJoin
-	(
-	IMemoryPool *pmp,
-	const IStatistics *pistatsOther,
-	DrgPstatspredjoin *pdrgpstatspredjoin
-	)
-	const
-{
-	GPOS_ASSERT(NULL != pistatsOther);
-	GPOS_ASSERT(NULL != pdrgpstatspredjoin);
 
-	return CJoinStatsProcessor::PstatsJoinDriver
-			(
-			pmp,
-			m_pstatsconf,
-			this,
-			pistatsOther,
-			pdrgpstatspredjoin,
-			IStatistics::EsjtInnerJoin /* esjt */,
-			true /* fIgnoreLasjHistComputation */
-			);
-}
 
 //		return statistics object after performing LASJ
 CStatistics *

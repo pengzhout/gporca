@@ -254,9 +254,7 @@ namespace gpnaucrates
 			virtual
 			CStatistics *PstatsFilter(IMemoryPool *pmp, CStatsPred *pstatspred, BOOL fCapNdvs) const;
 
-			// inner join with another stats structure
-			virtual
-			CStatistics *PstatsInnerJoin(IMemoryPool *pmp, const IStatistics *pistatsOther, DrgPstatspredjoin *pdrgpstatspredjoin) const;
+
 
 
 			// left anti semi join with another stats structure

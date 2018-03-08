@@ -20,7 +20,7 @@
 
 #include "naucrates/statistics/CStatisticsUtils.h"
 #include "naucrates/statistics/CLeftOuterJoinStatsProcessor.h"
-
+#include "naucrates/statistics/CInnerJoinStatsProcessor.h"
 #include "naucrates/dxl/CDXLUtils.h"
 
 #include "unittest/base.h"
@@ -236,7 +236,7 @@ CJoinCardinalityTest::EresUnittest_Join()
 		}
 		else
 		{
-			pstatsOutput = pstats1->PstatsInnerJoin(pmp, pstats2, pdrgpstatspredjoin);
+			pstatsOutput = CInnerJoinStatsProcessor::PstatsInnerJoin(pmp, pstats1, pstats2, pdrgpstatspredjoin);
 		}
 		GPOS_ASSERT(NULL != pstatsOutput);
 

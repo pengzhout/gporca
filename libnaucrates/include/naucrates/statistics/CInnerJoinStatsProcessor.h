@@ -36,9 +36,6 @@ namespace gpnaucrates
 	private:
 
 	public:
-		// derive statistics for the given join predicate
-		static
-		IStatistics *PstatsJoinArray(IMemoryPool *pmp, BOOL fOuterJoin, DrgPstat *pdrgpstat, CExpression *pexprScalar);
 
 		// helper for inner-joining histograms
 		static
@@ -55,6 +52,11 @@ namespace gpnaucrates
 						CDouble *pdScaleFactor, // output: scale factor based on the join
 						BOOL fEmptyInput // if true, one of the inputs is empty
 				);
+
+		// inner join with another stats structure
+		static
+		CStatistics *PstatsInnerJoin(IMemoryPool *pmp, const IStatistics *pistatsOuter, const IStatistics *pistatsInner, DrgPstatspredjoin *pdrgpstatspredjoin);
+
 	};
 }
 

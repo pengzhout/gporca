@@ -99,22 +99,94 @@ CJoinStatsProcessor::JoinHistograms
 //	derive statistics for the given join predicate
 IStatistics *
 CJoinStatsProcessor::PstatsJoinArray
-		(
-				IMemoryPool *pmp,
-				BOOL fOuterJoin,
-				DrgPstat *pdrgpstat,
-				CExpression *pexprScalar
-		)
+			(
+					IMemoryPool *pmp,
+					BOOL fOuterJoin,
+					DrgPstat *pdrgpstat,
+					CExpression *pexprScalar
+			)
 {
-	if(fOuterJoin)
-	{
-		return CLeftOuterJoinStatsProcessor::PstatsJoinArray(pmp, fOuterJoin, pdrgpstat, pexprScalar);
-	}
+		GPOS_ASSERT(NULL != pexprScalar);
+		GPOS_ASSERT(NULL != pdrgpstat);
+		GPOS_ASSERT(0 < pdrgpstat->UlLength());
+		GPOS_ASSERT_IMP(fOuterJoin, 2 == pdrgpstat->UlLength());
 
-	return CInnerJoinStatsProcessor::PstatsJoinArray(pmp, fOuterJoin, pdrgpstat, pexprScalar);
+		// create an empty set of outer references for statistics derivation
+		CColRefSet *pcrsOuterRefs = GPOS_NEW(pmp) CColRefSet(pmp);
+
+		// join statistics objects one by one using relevant predicates in given scalar expression
+		const ULONG ulStats = pdrgpstat->UlLength();
+		IStatistics *pstats = (*pdrgpstat)[0]->PstatsCopy(pmp);
+		CDouble dRowsOuter = pstats->DRows();
+
+		for (ULONG ul = 1; ul < ulStats; ul++)
+		{
+			IStatistics *pstatsCurrent = (*pdrgpstat)[ul];
+
+			DrgPcrs *pdrgpcrsOutput= GPOS_NEW(pmp) DrgPcrs(pmp);
+			pdrgpcrsOutput->Append(pstats->Pcrs(pmp));
+			pdrgpcrsOutput->Append(pstatsCurrent->Pcrs(pmp));
+
+			CStatsPred *pstatspredUnsupported = NULL;
+			DrgPstatspredjoin *pdrgpstatspredjoin = CStatsPredUtils::PdrgpstatspredjoinExtract
+					(
+							pmp,
+							pexprScalar,
+							pdrgpcrsOutput,
+							pcrsOuterRefs,
+							&pstatspredUnsupported
+					);
+			IStatistics *pstatsNew = NULL;
+
+			if (fOuterJoin)
+			{
+				pstatsNew = CLeftOuterJoinStatsProcessor::PstatsLOJ(pmp, pstats, pstatsCurrent, pdrgpstatspredjoin);
+			}
+			else
+			{
+				pstatsNew = CInnerJoinStatsProcessor::PstatsInnerJoin(pmp, pstats, pstatsCurrent, pdrgpstatspredjoin);
+			}
+			pstats->Release();
+			pstats = pstatsNew;
+
+			if (NULL != pstatspredUnsupported)
+			{
+				// apply the unsupported join filters as a filter on top of the join results.
+				// TODO,  June 13 2014 we currently only cap NDVs for filters
+				// immediately on top of tables.
+				IStatistics *pstatsAfterJoinFilter = pstats->PstatsFilter
+						(
+								pmp,
+								pstatspredUnsupported,
+								false /* fCapNdvs */
+						);
+
+				// If it is outer join and the cardinality after applying the unsupported join
+				// filters is less than the cardinality of outer child, we don't use this stats.
+				// Because we need to make sure that Card(LOJ) >= Card(Outer child of LOJ).
+				if (fOuterJoin && pstatsAfterJoinFilter->DRows() < dRowsOuter)
+				{
+					pstatsAfterJoinFilter->Release();
+				}
+				else
+				{
+					pstats->Release();
+					pstats = pstatsAfterJoinFilter;
+				}
+
+				pstatspredUnsupported->Release();
+			}
+
+			pdrgpstatspredjoin->Release();
+			pdrgpcrsOutput->Release();
+		}
+
+		// clean up
+		pcrsOuterRefs->Release();
+
+		return pstats;
 
 }
-
 
 
 // main driver to generate join stats
