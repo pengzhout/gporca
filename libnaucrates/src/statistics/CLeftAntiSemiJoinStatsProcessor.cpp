@@ -115,4 +115,32 @@ CLeftAntiSemiJoinStatsProcessor::JoinHistograms
 }
 
 
+//		return statistics object after performing LASJ
+CStatistics *
+CLeftAntiSemiJoinStatsProcessor::PstatsLASJoinStatic
+		(
+				IMemoryPool *pmp,
+				const IStatistics *pistatsOuter,
+				const IStatistics *pistatsInner,
+				DrgPstatspredjoin *pdrgpstatspredjoin,
+				BOOL fIgnoreLasjHistComputation
+		)
+{
+	GPOS_ASSERT(NULL != pistatsInner);
+	GPOS_ASSERT(NULL != pistatsOuter);
+	GPOS_ASSERT(NULL != pdrgpstatspredjoin);
+	const CStatistics *pstatsOuter = dynamic_cast<const CStatistics *> (pistatsOuter);
+
+	return CJoinStatsProcessor::PstatsJoinDriver
+			(
+					pmp,
+					pstatsOuter->PStatsConf(),
+					pistatsOuter,
+					pistatsInner,
+					pdrgpstatspredjoin,
+					IStatistics::EsjtLeftAntiSemiJoin /* esjt */,
+					fIgnoreLasjHistComputation
+			);
+}
+
 // EOF

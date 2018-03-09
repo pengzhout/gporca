@@ -20,6 +20,7 @@
 
 #include "naucrates/statistics/CLeftOuterJoinStatsProcessor.h"
 #include "naucrates/statistics/CLeftSemiJoinStatsProcessor.h"
+#include "naucrates/statistics/CLeftAntiSemiJoinStatsProcessor.h"
 #include "naucrates/statistics/CInnerJoinStatsProcessor.h"
 #include "gpos/common/CBitSet.h"
 #include "gpos/sync/CAutoMutex.h"
@@ -538,19 +539,7 @@ CStatistics::PstatsLASJoin
 	)
 	const
 {
-	GPOS_ASSERT(NULL != pistatsOther);
-	GPOS_ASSERT(NULL != pdrgpstatspredjoin);
-
-	return CJoinStatsProcessor::PstatsJoinDriver
-			(
-			pmp,
-			m_pstatsconf,
-			this,
-			pistatsOther,
-			pdrgpstatspredjoin,
-			IStatistics::EsjtLeftAntiSemiJoin /* esjt */,
-			fIgnoreLasjHistComputation
-			);
+	return CLeftAntiSemiJoinStatsProcessor::PstatsLASJoinStatic(pmp, this, pistatsOther, pdrgpstatspredjoin, fIgnoreLasjHistComputation);
 }
 
 // return statistics object after Group by computation

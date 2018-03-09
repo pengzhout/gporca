@@ -15,6 +15,8 @@
 #include "naucrates/statistics/CStatsPredJoin.h"
 #include "naucrates/statistics/IStatistics.h"
 #include "gpopt/operators/CExpression.h"
+#include "naucrates/statistics/CJoinStatsProcessor.h"
+
 
 
 namespace gpnaucrates
@@ -31,7 +33,7 @@ namespace gpnaucrates
 	//		Processor for computing statistics for left anti-semi join
 	//
 	//---------------------------------------------------------------------------
-	class CLeftAntiSemiJoinStatsProcessor
+	class CLeftAntiSemiJoinStatsProcessor : public CJoinStatsProcessor
 	{
 	private:
 
@@ -51,6 +53,17 @@ namespace gpnaucrates
 						CDouble *pdScaleFactor, // output: scale factor based on the join
 						BOOL fEmptyInput, // if true, one of the inputs is empty
 						BOOL fIgnoreLasjHistComputation
+				);
+		// left anti semi join with another stats structure
+		static
+		CStatistics *PstatsLASJoinStatic
+				(
+						IMemoryPool *pmp,
+						const IStatistics *pistatsOuter,
+						const IStatistics *pistatsInner,
+						DrgPstatspredjoin *pdrgpstatspredjoin,
+						BOOL fIgnoreLasjHistComputation // except for the case of LOJ cardinality estimation this flag is always
+						// "true" since LASJ stats computation is very aggressive
 				);
 	};
 }
