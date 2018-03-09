@@ -25,6 +25,7 @@
 #include "naucrates/statistics/CStatisticsUtils.h"
 #include "naucrates/statistics/CInnerJoinStatsProcessor.h"
 #include "naucrates/statistics/CJoinStatsProcessor.h"
+#include "naucrates/statistics/COuterRefStatsProcessor.h"
 #include "naucrates/statistics/CStatistics.h"
 #include "naucrates/statistics/CStatsPredUtils.h"
 #include "naucrates/statistics/CStatsPredDisj.h"
@@ -1144,7 +1145,7 @@ CStatisticsUtils::PstatsFilter
 	if (exprhdl.FHasOuterRefs() && 0 < pdrgpstatOuter->UlLength())
 	{
 		// derive stats based on outer references
-		IStatistics *pstats = CJoinStatsProcessor::PstatsDeriveWithOuterRefs(pmp, false /*fOuterJoin*/, exprhdl, pexprScalarOuterRefs, pstatsResult, pdrgpstatOuter);
+		IStatistics *pstats = COuterRefStatsProcessor::PstatsDeriveWithOuterRefs(pmp, false /*fOuterJoin*/, exprhdl, pexprScalarOuterRefs, pstatsResult, pdrgpstatOuter);
 		pstatsResult->Release();
 		pstatsResult = pstats;
 	}
