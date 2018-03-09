@@ -319,18 +319,6 @@ namespace gpnaucrates
 			virtual
 			IOstream &OsPrint(IOstream &os) const;
 
-			// for the output stats object, compute its upper bound cardinality mapping based on the bounding method
-			// estimated output cardinality and information maintained in the current stats object
-			virtual
-			void ComputeCardUpperBounds
-					(
-					IMemoryPool *pmp, // memory pool
-					CStatistics *pstatsOutput, // output statistics object that is to be updated
-					CDouble dRowsOutput, // estimated output cardinality of the operator
-					CStatistics::ECardBoundingMethod ecbm // technique used to estimate max source cardinality in the output stats object
-					)
-					const;
-
 			// add upper bound of source cardinality
 			virtual
 			void AddCardUpperBound(CUpperBoundNDVs *pubndv);

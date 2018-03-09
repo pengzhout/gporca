@@ -19,6 +19,8 @@
 #include "naucrates/statistics/CJoinStatsProcessor.h"
 
 #include "naucrates/statistics/CLeftOuterJoinStatsProcessor.h"
+#include "naucrates/statistics/CLeftSemiJoinStatsProcessor.h"
+#include "naucrates/statistics/CInnerJoinStatsProcessor.h"
 #include "gpos/common/CBitSet.h"
 #include "gpos/sync/CAutoMutex.h"
 #include "gpos/memory/CAutoMemoryPool.h"
@@ -205,7 +207,7 @@ CStatistics::PstatsFilter
 	// since the filter operation is reductive, we choose the bounding method that takes
 	// the minimum of the cardinality upper bound of the source column (in the input hash map)
 	// and estimated output cardinality
-	ComputeCardUpperBounds(pmp, pstatsFilter, dRowsFilter, CStatistics::EcbmMin /* ecbm */);
+	CJoinStatsProcessor::ComputeCardUpperBounds(pmp, this, pstatsFilter, dRowsFilter, CStatistics::EcbmMin /* ecbm */);
 
 	return pstatsFilter;
 }
@@ -507,46 +509,7 @@ CStatistics::PstatsLSJoin
 	)
 	const
 {
-	GPOS_ASSERT(NULL != pstatsInner);
-	GPOS_ASSERT(NULL != pdrgpstatspredjoin);
-
-	const ULONG ulLen = pdrgpstatspredjoin->UlLength();
-
-	// iterate over all inner columns and perform a group by to remove duplicates
-	DrgPul *pdrgpulInnerColumnIds = GPOS_NEW(pmp) DrgPul(pmp);
-	for (ULONG ul = 0; ul < ulLen; ul++)
-	{
-		ULONG ulInnerColId = ((*pdrgpstatspredjoin)[ul])->UlColId2();
-		pdrgpulInnerColumnIds->Append(GPOS_NEW(pmp) ULONG(ulInnerColId));
-	}
-
-	// dummy agg columns required for group by derivation
-	DrgPul *pdrgpulAgg = GPOS_NEW(pmp) DrgPul(pmp);
-	IStatistics *pstatsInnerNoDups = pstatsInner->PstatsGroupBy
-													(
-													pmp,
-													pdrgpulInnerColumnIds,
-													pdrgpulAgg,
-													NULL // pbsKeys: no keys, use all grouping cols
-													);
-
-	CStatistics *pstatsSemiJoin = CJoinStatsProcessor::PstatsJoinDriver
-									(
-									pmp,
-									m_pstatsconf,
-									this,
-									pstatsInnerNoDups,
-									pdrgpstatspredjoin,
-									IStatistics::EsjtLeftSemiJoin /* esjt */,
-									true /* fIgnoreLasjHistComputation */
-									);
-
-	// clean up
-	pdrgpulInnerColumnIds->Release();
-	pdrgpulAgg->Release();
-	pstatsInnerNoDups->Release();
-
-	return pstatsSemiJoin;
+	return CLeftSemiJoinStatsProcessor::PstatsLSJoinStatic(pmp, this, pstatsInner, pdrgpstatspredjoin);
 }
 
 
@@ -561,19 +524,7 @@ CStatistics::PstatsInnerJoin
 	)
 	const
 {
-	GPOS_ASSERT(NULL != pistatsOther);
-	GPOS_ASSERT(NULL != pdrgpstatspredjoin);
-
-	return CJoinStatsProcessor::PstatsJoinDriver
-			(
-			pmp,
-			m_pstatsconf,
-			this,
-			pistatsOther,
-			pdrgpstatspredjoin,
-			IStatistics::EsjtInnerJoin /* esjt */,
-			true /* fIgnoreLasjHistComputation */
-			);
+	return CInnerJoinStatsProcessor::PstatsInnerJoinStatic(pmp, this, pistatsOther, pdrgpstatspredjoin);
 }
 
 //		return statistics object after performing LASJ
@@ -665,7 +616,7 @@ CStatistics::PstatsGroupBy
 	// and estimated group by cardinality.
 
 	// modify source id to upper bound card information
-	ComputeCardUpperBounds(pmp, pstatsAgg, dRowsAgg, CStatistics::EcbmMin /* ecbm */);
+	CJoinStatsProcessor::ComputeCardUpperBounds(pmp, this, pstatsAgg, dRowsAgg, CStatistics::EcbmMin /* ecbm */);
 
 	return pstatsAgg;
 }
@@ -780,7 +731,7 @@ CStatistics::PstatsProject
 	// In the output statistics object, the upper bound source cardinality of the project column
 	// is equivalent the estimate project cardinality.
 
-	ComputeCardUpperBounds(pmp, pstatsProject, m_dRows, CStatistics::EcbmInputSourceMaxCard /* ecbm */);
+	CJoinStatsProcessor::ComputeCardUpperBounds(pmp, this, pstatsProject, m_dRows, CStatistics::EcbmInputSourceMaxCard /* ecbm */);
 
 	// add upper bound card information for the project columns
 	CreateAndInsertUpperBoundNDVs(pmp, pstatsProject, pdrgpulProjColIds, m_dRows);
@@ -907,7 +858,7 @@ CStatistics::PstatsUnionAll
 	// is the estimate union all cardinality.
 
 	// modify upper bound card information
-	ComputeCardUpperBounds(pmp, pstatsUnionAll, dRowsUnionAll, CStatistics::EcbmOutputCard /* ecbm */);
+	CJoinStatsProcessor::ComputeCardUpperBounds(pmp, this, pstatsUnionAll, dRowsUnionAll, CStatistics::EcbmOutputCard /* ecbm */);
 
 	return pstatsUnionAll;
 }
@@ -963,7 +914,7 @@ CStatistics::PstatsLimit
 	// and estimated limit cardinality.
 
 	// modify source id to upper bound card information
-	ComputeCardUpperBounds(pmp, pstatsLimit, dRowsLimit, CStatistics::EcbmMin /* ecbm */);
+	CJoinStatsProcessor::ComputeCardUpperBounds(pmp, this, pstatsLimit, dRowsLimit, CStatistics::EcbmMin /* ecbm */);
 
 	return pstatsLimit;
 }
@@ -1061,7 +1012,7 @@ CStatistics::PstatsScale
 	// and estimated output cardinality.
 
 	// modify source id to upper bound card information
-	ComputeCardUpperBounds(pmp, pstatsScaled, dRowsScaled, CStatistics::EcbmMin /* ecbm */);
+	CJoinStatsProcessor::ComputeCardUpperBounds(pmp, this, pstatsScaled, dRowsScaled, CStatistics::EcbmMin /* ecbm */);
 
 	return pstatsScaled;
 }
@@ -1187,42 +1138,6 @@ CStatistics::AddHistogramsWithRemap
 		{
 			CStatisticsUtils::AddHistogram(pmp, ulColIdDest, phistSrc, phmulhistDest);
 		}
-	}
-}
-
-//	for the output statistics object, compute its upper bound cardinality
-// 	mapping based on the bounding method estimated output cardinality
-//  and information maintained in the current statistics object
-void
-CStatistics::ComputeCardUpperBounds
-	(
-	IMemoryPool *pmp,
-	CStatistics *pstatsOutput, // output statistics object that is to be updated
-	CDouble dRowsOutput, // estimated output cardinality of the operator
-	CStatistics::ECardBoundingMethod ecbm // technique used to estimate max source cardinality in the output stats object
-	)
-	const
-{
-	GPOS_ASSERT(NULL != pstatsOutput);
-	GPOS_ASSERT(CStatistics::EcbmSentinel != ecbm);
-
-	ULONG ulLen = m_pdrgpubndvs->UlLength();
-	for (ULONG ul = 0; ul < ulLen; ul++)
-	{
-		const CUpperBoundNDVs *pubndv = (*m_pdrgpubndvs)[ul];
-		CDouble dUpperBoundNDVInput = pubndv->DUpperBoundNDVs();
-		CDouble dUpperBoundNDVOutput = dRowsOutput;
-		if (CStatistics::EcbmInputSourceMaxCard == ecbm)
-		{
-			dUpperBoundNDVOutput = dUpperBoundNDVInput;
-		}
-		else if (CStatistics::EcbmMin == ecbm)
-		{
-			dUpperBoundNDVOutput = std::min(dUpperBoundNDVInput.DVal(), dRowsOutput.DVal());
-		}
-
-		CUpperBoundNDVs *pubndvCopy = pubndv->PubndvCopy(pmp, dUpperBoundNDVOutput);
-		pstatsOutput->AddCardUpperBound(pubndvCopy);
 	}
 }
 

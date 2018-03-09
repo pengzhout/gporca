@@ -107,8 +107,8 @@ CLeftOuterJoinStatsProcessor::PstatsLOJStatic
 	// and estimated join cardinality.
 
 	// modify source id to upper bound card information
-	ComputeCardUpperBounds(pmp, pstatsOuterSide, pstatsLOJ, dRowsLOJ, CStatistics::EcbmMin /* ecbm */);
-	pstatsInnerSide->ComputeCardUpperBounds(pmp, pstatsLOJ, dRowsLOJ, CStatistics::EcbmMin /* ecbm */);
+	CJoinStatsProcessor::ComputeCardUpperBounds(pmp, pstatsOuterSide, pstatsLOJ, dRowsLOJ, CStatistics::EcbmMin /* ecbm */);
+	CJoinStatsProcessor::ComputeCardUpperBounds(pmp, pstatsInnerSide, pstatsLOJ, dRowsLOJ, CStatistics::EcbmMin /* ecbm */);
 
 	return pstatsLOJ;
 }
