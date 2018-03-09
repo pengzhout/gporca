@@ -65,6 +65,9 @@ namespace gpnaucrates
 						BOOL fIgnoreLasjHistComputation // except for the case of LOJ cardinality estimation this flag is always
 						// "true" since LASJ stats computation is very aggressive
 				);
+		// compute the null frequency for LASJ
+		static
+		CDouble DNullFreqLASJ(CStatsPred::EStatsCmpType escmpt, const CHistogram *phistOuter, const CHistogram *phistInner);
 	};
 }
 

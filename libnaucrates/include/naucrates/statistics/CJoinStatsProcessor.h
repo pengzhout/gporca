@@ -112,9 +112,33 @@ namespace gpnaucrates
 		static
 		IStatistics *PstatsJoinArray(IMemoryPool *pmp, BOOL fOuterJoin, DrgPstat *pdrgpstat, CExpression *pexprScalar);
 
+		// derive statistics when scalar expression has outer references
+		static
+		IStatistics *PstatsDeriveWithOuterRefs
+				(
+						IMemoryPool *pmp,
+						BOOL fOuterJoin, // use outer join semantics for statistics derivation
+						CExpressionHandle &exprhdl, // handle attached to the logical expression we want to derive stats for
+						CExpression *pexprScalar, // scalar condition used for stats derivation
+						IStatistics *pstats, // statistics object of attached expression
+						DrgPstat *pdrgpstatOuter // array of stats objects where outer references are defined
+				);
 
+		// helper for deriving statistics for join operation based on given scalar expression
+		static
+		IStatistics *PstatsJoinWithOuterRefs
+				(
+						IMemoryPool *pmp,
+						CExpressionHandle &exprhdl,
+						DrgPstat *pdrgpstatChildren,
+						CExpression *pexprScalarLocal, // filter expression on local columns only
+						CExpression *pexprScalarOuterRefs, // filter expression involving outer references
+						DrgPstat *pdrgpstatOuter
+				);
 
-
+		// derive statistics for join operation given array of statistics object
+		static
+		IStatistics *PstatsJoin(IMemoryPool *pmp, CExpressionHandle &exprhdl, DrgPstat *pdrgpstatCtxt);
 	};
 }
 

@@ -20,6 +20,7 @@
 
 #include "naucrates/statistics/CStatistics.h"
 #include "naucrates/statistics/CStatisticsUtils.h"
+#include "naucrates/statistics/CLeftAntiSemiJoinStatsProcessor.h"
 #include "naucrates/statistics/CScaleFactorUtils.h"
 #include "naucrates/statistics/CHistogramUtils.h"
 
@@ -973,7 +974,7 @@ CHistogram::PhistLASJ
 		GPOS_DELETE(pbucketCandidate);
 	}
 
-	CDouble dNullFreq = CStatisticsUtils::DNullFreqLASJ(escmpt, this, phist);
+	CDouble dNullFreq = CLeftAntiSemiJoinStatsProcessor::DNullFreqLASJ(escmpt, this, phist);
 
 	return GPOS_NEW(pmp) CHistogram(pdrgppbucketNew, true /*fWellDefined*/, dNullFreq, m_dDistinctRemain, m_dFreqRemain);
 }

@@ -143,4 +143,35 @@ CLeftAntiSemiJoinStatsProcessor::PstatsLASJoinStatic
 			);
 }
 
+
+//		Compute the null frequency for LASJ
+CDouble
+CLeftAntiSemiJoinStatsProcessor::DNullFreqLASJ
+		(
+				CStatsPred::EStatsCmpType escmpt,
+				const CHistogram *phistOuter,
+				const CHistogram *phistInner
+		)
+{
+	GPOS_ASSERT(NULL != phistOuter);
+	GPOS_ASSERT(NULL != phistInner);
+
+	if (CStatsPred::EstatscmptINDF != escmpt)
+	{
+		// for equality predicate NULLs on the outer side of the join
+		// will not join with those in the inner side
+		return phistOuter->DNullFreq();
+	}
+
+	if (CStatistics::DEpsilon < phistInner->DNullFreq())
+	{
+		// for INDF predicate NULLs on the outer side of the join
+		// will join with those in the inner side if they are present
+		return CDouble(0.0);
+	}
+
+	return phistOuter->DNullFreq();
+}
+
+
 // EOF

@@ -150,17 +150,7 @@ namespace gpnaucrates
 					DrgPbucket *pdrgpbucket
 					);
 
-			// helper for deriving statistics for join operation based on given scalar expression
-			static
-			IStatistics *PstatsJoinWithOuterRefs
-				(
-				IMemoryPool *pmp,
-				CExpressionHandle &exprhdl,
-				DrgPstat *pdrgpstatChildren,
-				CExpression *pexprScalarLocal, // filter expression on local columns only
-				CExpression *pexprScalarOuterRefs, // filter expression involving outer references
-				DrgPstat *pdrgpstatOuter
-				);
+
 
 			// add the NDVs for all of the grouping columns
 			static
@@ -324,17 +314,7 @@ namespace gpnaucrates
 			void PrintHistogramMap(IOstream &os, HMUlHist *phmulhist);
 #endif // GPOS_DEBUG
 
-			// derive statistics when scalar expression has outer references
-			static
-			IStatistics *PstatsDeriveWithOuterRefs
-				(
-				IMemoryPool *pmp,
-				BOOL fOuterJoin, // use outer join semantics for statistics derivation
-				CExpressionHandle &exprhdl, // handle attached to the logical expression we want to derive stats for
-				CExpression *pexprScalar, // scalar condition used for stats derivation
-				IStatistics *pstats, // statistics object of attached expression
-				DrgPstat *pdrgpstatOuter // array of stats objects where outer references are defined
-				);
+
 
 			// derive statistics for filter operation based on given scalar expression
 			static
@@ -350,9 +330,6 @@ namespace gpnaucrates
 
 
 
-			// derive statistics for join operation given array of statistics object
-			static
-			IStatistics *PstatsJoin(IMemoryPool *pmp, CExpressionHandle &exprhdl, DrgPstat *pdrgpstatCtxt);
 
 			// derive statistics of dynamic scan based on part-selector stats in the given map
 			static
@@ -434,9 +411,7 @@ namespace gpnaucrates
 							CColRefSet *pcrsGrpColComputed // output set of grouping columns that are computed attributes
 							);
 
-		 	// compute the null frequency for LASJ
-			static
-			CDouble DNullFreqLASJ(CStatsPred::EStatsCmpType escmpt, const CHistogram *phistOuter, const CHistogram *phistInner);
+
 
 			// return the total number of distinct values in the given array of buckets
 			static
