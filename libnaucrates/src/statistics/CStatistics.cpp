@@ -208,7 +208,7 @@ CStatistics::PstatsFilter
 	// since the filter operation is reductive, we choose the bounding method that takes
 	// the minimum of the cardinality upper bound of the source column (in the input hash map)
 	// and estimated output cardinality
-	CJoinStatsProcessor::ComputeCardUpperBounds(pmp, this, pstatsFilter, dRowsFilter, CStatistics::EcbmMin /* ecbm */);
+	CStatisticsUtils::ComputeCardUpperBounds(pmp, this, pstatsFilter, dRowsFilter, CStatistics::EcbmMin /* ecbm */);
 
 	return pstatsFilter;
 }
@@ -605,7 +605,7 @@ CStatistics::PstatsGroupBy
 	// and estimated group by cardinality.
 
 	// modify source id to upper bound card information
-	CJoinStatsProcessor::ComputeCardUpperBounds(pmp, this, pstatsAgg, dRowsAgg, CStatistics::EcbmMin /* ecbm */);
+	CStatisticsUtils::ComputeCardUpperBounds(pmp, this, pstatsAgg, dRowsAgg, CStatistics::EcbmMin /* ecbm */);
 
 	return pstatsAgg;
 }
@@ -720,7 +720,7 @@ CStatistics::PstatsProject
 	// In the output statistics object, the upper bound source cardinality of the project column
 	// is equivalent the estimate project cardinality.
 
-	CJoinStatsProcessor::ComputeCardUpperBounds(pmp, this, pstatsProject, m_dRows, CStatistics::EcbmInputSourceMaxCard /* ecbm */);
+	CStatisticsUtils::ComputeCardUpperBounds(pmp, this, pstatsProject, m_dRows, CStatistics::EcbmInputSourceMaxCard /* ecbm */);
 
 	// add upper bound card information for the project columns
 	CreateAndInsertUpperBoundNDVs(pmp, pstatsProject, pdrgpulProjColIds, m_dRows);
@@ -847,7 +847,7 @@ CStatistics::PstatsUnionAll
 	// is the estimate union all cardinality.
 
 	// modify upper bound card information
-	CJoinStatsProcessor::ComputeCardUpperBounds(pmp, this, pstatsUnionAll, dRowsUnionAll, CStatistics::EcbmOutputCard /* ecbm */);
+	CStatisticsUtils::ComputeCardUpperBounds(pmp, this, pstatsUnionAll, dRowsUnionAll, CStatistics::EcbmOutputCard /* ecbm */);
 
 	return pstatsUnionAll;
 }
@@ -903,7 +903,7 @@ CStatistics::PstatsLimit
 	// and estimated limit cardinality.
 
 	// modify source id to upper bound card information
-	CJoinStatsProcessor::ComputeCardUpperBounds(pmp, this, pstatsLimit, dRowsLimit, CStatistics::EcbmMin /* ecbm */);
+	CStatisticsUtils::ComputeCardUpperBounds(pmp, this, pstatsLimit, dRowsLimit, CStatistics::EcbmMin /* ecbm */);
 
 	return pstatsLimit;
 }
@@ -1001,7 +1001,7 @@ CStatistics::PstatsScale
 	// and estimated output cardinality.
 
 	// modify source id to upper bound card information
-	CJoinStatsProcessor::ComputeCardUpperBounds(pmp, this, pstatsScaled, dRowsScaled, CStatistics::EcbmMin /* ecbm */);
+	CStatisticsUtils::ComputeCardUpperBounds(pmp, this, pstatsScaled, dRowsScaled, CStatistics::EcbmMin /* ecbm */);
 
 	return pstatsScaled;
 }

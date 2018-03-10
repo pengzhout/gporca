@@ -107,7 +107,13 @@ CLogicalIndexApply::PstatsDerive
 	pdrgpstat->Append(pstatsOuter);
 	pstatsInner->AddRef();
 	pdrgpstat->Append(pstatsInner);
-	IStatistics *pstats = CJoinStatsProcessor::PstatsJoinArray(pmp, m_fOuterJoin, pdrgpstat, pexprScalar);
+	IStatistics::EStatsJoinType eStatsJoinType = IStatistics::EsjtInnerJoin;
+	// TODO: Melanie add a comment here to explain this
+	if (m_fOuterJoin)
+	{
+		eStatsJoinType = IStatistics::EsjtLeftOuterJoin;
+	}
+	IStatistics *pstats = CJoinStatsProcessor::PstatsJoinArray(pmp, pdrgpstat, pexprScalar, eStatsJoinType);
 	pdrgpstat->Release();
 
 	return pstats;

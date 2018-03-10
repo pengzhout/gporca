@@ -1145,7 +1145,13 @@ CStatisticsUtils::PstatsFilter
 	if (exprhdl.FHasOuterRefs() && 0 < pdrgpstatOuter->UlLength())
 	{
 		// derive stats based on outer references
-		IStatistics *pstats = COuterRefStatsProcessor::PstatsDeriveWithOuterRefs(pmp, false /*fOuterJoin*/, exprhdl, pexprScalarOuterRefs, pstatsResult, pdrgpstatOuter);
+		IStatistics *pstats = COuterRefStatsProcessor::PstatsDeriveWithOuterRefs(pmp,
+																				 exprhdl,
+																				 pexprScalarOuterRefs,
+																				 pstatsResult,
+																				 pdrgpstatOuter,
+																				 IStatistics::EsjtInnerJoin
+																				);
 		pstatsResult->Release();
 		pstatsResult = pstats;
 	}
@@ -2011,6 +2017,43 @@ CStatisticsUtils::AddWidthInfoWithRemap
 					phmuldoubleDest->FInsert(GPOS_NEW(pmp) ULONG(ulColId), pdWidthCopy);
 			GPOS_ASSERT(fResult);
 		}
+	}
+}
+
+//	for the output statistics object, compute its upper bound cardinality
+// 	mapping based on the bounding method estimated output cardinality
+//  and information maintained in the current statistics object
+void
+CStatisticsUtils::ComputeCardUpperBounds
+		(
+				IMemoryPool *pmp,
+				const CStatistics *pstatsInput,
+				CStatistics *pstatsOutput, // output statistics object that is to be updated
+				CDouble dRowsOutput, // estimated output cardinality of the operator
+				CStatistics::ECardBoundingMethod ecbm // technique used to estimate max source cardinality in the output stats object
+		)
+{
+	GPOS_ASSERT(NULL != pstatsOutput);
+	GPOS_ASSERT(CStatistics::EcbmSentinel != ecbm);
+
+	const DrgPubndvs *pdrgubndvInput = pstatsInput->Pdrgundv();
+	ULONG ulLen = pdrgubndvInput->UlLength();
+	for (ULONG ul = 0; ul < ulLen; ul++)
+	{
+		const CUpperBoundNDVs *pubndv = (*pdrgubndvInput)[ul];
+		CDouble dUpperBoundNDVInput = pubndv->DUpperBoundNDVs();
+		CDouble dUpperBoundNDVOutput = dRowsOutput;
+		if (CStatistics::EcbmInputSourceMaxCard == ecbm)
+		{
+			dUpperBoundNDVOutput = dUpperBoundNDVInput;
+		}
+		else if (CStatistics::EcbmMin == ecbm)
+		{
+			dUpperBoundNDVOutput = std::min(dUpperBoundNDVInput.DVal(), dRowsOutput.DVal());
+		}
+
+		CUpperBoundNDVs *pubndvCopy = pubndv->PubndvCopy(pmp, dUpperBoundNDVOutput);
+		pstatsOutput->AddCardUpperBound(pubndvCopy);
 	}
 }
 

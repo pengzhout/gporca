@@ -23,6 +23,7 @@
 #include "gpopt/optimizer/COptimizerConfig.h"
 
 #include "naucrates/statistics/CStatisticsUtils.h"
+#include "naucrates/statistics/IStatistics.h"
 #include "naucrates/statistics/COuterRefStatsProcessor.h"
 #include "naucrates/statistics/CLeftAntiSemiJoinStatsProcessor.h"
 #include "naucrates/statistics/CLeftOuterJoinStatsProcessor.h"
@@ -69,15 +70,19 @@ COuterRefStatsProcessor::PstatsJoinWithOuterRefs
 				COperator::EopLogicalInnerJoin == eopid ||
 				COperator::EopLogicalNAryJoin == eopid);
 
-	BOOL fOuterJoin = (COperator::EopLogicalLeftOuterJoin == eopid);
+	IStatistics::EStatsJoinType eStatsJoinType = IStatistics::EsjtInnerJoin;
+	if (COperator::EopLogicalLeftOuterJoin == eopid)
+	{
+		eStatsJoinType = IStatistics::EsjtLeftOuterJoin;
+	}
 
 	// derive stats based on local join condition
-	IStatistics *pstatsResult = CJoinStatsProcessor::PstatsJoinArray(pmp, fOuterJoin, pdrgpstatChildren, pexprScalarLocal);
+	IStatistics *pstatsResult = CJoinStatsProcessor::PstatsJoinArray(pmp, pdrgpstatChildren, pexprScalarLocal, eStatsJoinType);
 
 	if (exprhdl.FHasOuterRefs() && 0 < pdrgpstatOuter->UlLength())
 	{
 		// derive stats based on outer references
-		IStatistics *pstats = PstatsDeriveWithOuterRefs(pmp, fOuterJoin, exprhdl, pexprScalarOuterRefs, pstatsResult, pdrgpstatOuter);
+		IStatistics *pstats = PstatsDeriveWithOuterRefs(pmp, exprhdl, pexprScalarOuterRefs, pstatsResult, pdrgpstatOuter, eStatsJoinType);
 		pstatsResult->Release();
 		pstatsResult = pstats;
 	}
@@ -112,7 +117,6 @@ IStatistics *
 COuterRefStatsProcessor::PstatsDeriveWithOuterRefs
 		(
 				IMemoryPool *pmp,
-				BOOL fOuterJoin,
 				CExpressionHandle &
 #ifdef GPOS_DEBUG
 				exprhdl // handle attached to the logical expression we want to derive stats for
@@ -120,7 +124,8 @@ COuterRefStatsProcessor::PstatsDeriveWithOuterRefs
 		,
 				CExpression *pexprScalar, // scalar condition to be used for stats derivation
 				IStatistics *pstats, // statistics object of the attached expression
-				DrgPstat *pdrgpstatOuter // array of stats objects where outer references are defined
+				DrgPstat *pdrgpstatOuter, // array of stats objects where outer references are defined
+				IStatistics::EStatsJoinType eStatsJoinType
 )
 {
 	GPOS_ASSERT(exprhdl.FHasOuterRefs() && "attached expression does not have outer references");
@@ -128,10 +133,13 @@ COuterRefStatsProcessor::PstatsDeriveWithOuterRefs
 	GPOS_ASSERT(NULL != pstats);
 	GPOS_ASSERT(NULL != pdrgpstatOuter);
 	GPOS_ASSERT(0 < pdrgpstatOuter->UlLength());
+	GPOS_ASSERT(IStatistics::EstiSentinel != eStatsJoinType);
+
+
 
 	// join outer stats object based on given scalar expression,
 	// we use inner join semantics here to consider all relevant combinations of outer tuples
-	IStatistics *pstatsOuter = CJoinStatsProcessor::PstatsJoinArray(pmp, false /*fOuterJoin*/, pdrgpstatOuter, pexprScalar);
+	IStatistics *pstatsOuter = CJoinStatsProcessor::PstatsJoinArray(pmp, pdrgpstatOuter, pexprScalar, IStatistics::EsjtInnerJoin);
 	CDouble dRowsOuter = pstatsOuter->DRows();
 
 	// join passed stats object and outer stats based on the passed join type
@@ -139,7 +147,7 @@ COuterRefStatsProcessor::PstatsDeriveWithOuterRefs
 	pdrgpstat->Append(pstatsOuter);
 	pstats->AddRef();
 	pdrgpstat->Append(pstats);
-	IStatistics *pstatsJoined = CJoinStatsProcessor::PstatsJoinArray(pmp, fOuterJoin, pdrgpstat, pexprScalar);
+	IStatistics *pstatsJoined = CJoinStatsProcessor::PstatsJoinArray(pmp, pdrgpstat, pexprScalar, eStatsJoinType);
 	pdrgpstat->Release();
 
 	// scale result using cardinality of outer stats and set number of rebinds of returned stats

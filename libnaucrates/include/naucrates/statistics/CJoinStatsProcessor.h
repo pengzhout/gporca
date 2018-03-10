@@ -35,23 +35,8 @@ namespace gpnaucrates
 	class CJoinStatsProcessor
 	{
 	private:
-		// helper for joining histograms
-		static
-		void JoinHistograms
-				(
-						IMemoryPool *pmp,
-						const CHistogram *phist1,
-						const CHistogram *phist2,
-						CStatsPredJoin *pstatsjoin,
-						CDouble dRows1,
-						CDouble dRows2,
-						BOOL fLASJ, // if true, use anti-semi join semantics, otherwise use inner join semantics
-						CHistogram **pphist1, // output: histogram 1 after join
-						CHistogram **pphist2, // output: histogram 2 after join
-						CDouble *pdScaleFactor, // output: scale factor based on the join
-						BOOL fEmptyInput, // if true, one of the inputs is empty
-						BOOL fIgnoreLasjHistComputation
-				);
+
+
 
 	protected:
 
@@ -63,7 +48,7 @@ namespace gpnaucrates
 						CDouble dRowsLeft,
 						CDouble dRowsRight,
 						DrgPdouble *pdrgpd,
-						IStatistics::EStatsJoinType esjt
+						IStatistics::EStatsJoinType eStatsJoinType
 				);
 
 
@@ -75,25 +60,32 @@ namespace gpnaucrates
 				(
 						BOOL fEmptyOuter,
 						BOOL fEmptyOutput,
-						BOOL fLASJ,
 						const CHistogram *phistOuter,
 						const CHistogram *phistInner,
-						CHistogram *phistJoin
+						CHistogram *phistJoin,
+						IStatistics::EStatsJoinType eStatsJoinType
 				);
 
+		// helper for joining histograms
+		static
+		void JoinHistograms
+				(
+						IMemoryPool *pmp,
+						const CHistogram *phist1,
+						const CHistogram *phist2,
+						CStatsPredJoin *pstatsjoin,
+						CDouble dRows1,
+						CDouble dRows2,
+						CHistogram **pphist1, // output: histogram 1 after join
+						CHistogram **pphist2, // output: histogram 2 after join
+						CDouble *pdScaleFactor, // output: scale factor based on the join
+						BOOL fEmptyInput, // if true, one of the inputs is empty
+						IStatistics::EStatsJoinType eStatsJoinType,
+						BOOL fIgnoreLasjHistComputation
+				);
 
 	public:
-		// for the output stats object, compute its upper bound cardinality mapping based on the bounding method
-		// estimated output cardinality and information maintained in the current stats object
-		static
-		void ComputeCardUpperBounds
-				(
-						IMemoryPool *pmp, // memory pool
-						const CStatistics *pstatsInput,
-						CStatistics *pstatsOutput, // output statistics object that is to be updated
-						CDouble dRowsOutput, // estimated output cardinality of the operator
-						CStatistics::ECardBoundingMethod ecbm // technique used to estimate max source cardinality in the output stats object
-				);
+
 
 		// main driver to generate join stats
 		static
@@ -104,13 +96,19 @@ namespace gpnaucrates
 						const IStatistics *pistatsOuter,
 						const IStatistics *pistatsInner,
 						DrgPstatspredjoin *pdrgpstatspredjoin,
-						IStatistics::EStatsJoinType ejst,
+						IStatistics::EStatsJoinType eStatsJoinType,
 						BOOL fIgnoreLasjHistComputation
 						);
 
 
 		static
-		IStatistics *PstatsJoinArray(IMemoryPool *pmp, BOOL fOuterJoin, DrgPstat *pdrgpstat, CExpression *pexprScalar);
+		IStatistics *PstatsJoinArray
+				(
+				IMemoryPool *pmp,
+				DrgPstat *pdrgpstat,
+				CExpression *pexprScalar,
+				IStatistics::EStatsJoinType eStatsJoinType
+				);
 
 
 		// derive statistics for join operation given array of statistics object

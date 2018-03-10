@@ -40,7 +40,7 @@ namespace gpnaucrates
 	public:
 		// helper for LAS-joining histograms
 		static
-		void JoinHistograms
+		void JoinHistogramsLASJ
 				(
 						IMemoryPool *pmp,
 						const CHistogram *phist1,
@@ -52,6 +52,7 @@ namespace gpnaucrates
 						CHistogram **pphist2, // output: histogram 2 after join
 						CDouble *pdScaleFactor, // output: scale factor based on the join
 						BOOL fEmptyInput, // if true, one of the inputs is empty
+						IStatistics::EStatsJoinType eStatsJoinType,
 						BOOL fIgnoreLasjHistComputation
 				);
 		// left anti semi join with another stats structure

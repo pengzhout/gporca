@@ -56,11 +56,11 @@ namespace gpnaucrates
 		IStatistics *PstatsDeriveWithOuterRefs
 				(
 						IMemoryPool *pmp,
-						BOOL fOuterJoin, // use outer join semantics for statistics derivation
 						CExpressionHandle &exprhdl, // handle attached to the logical expression we want to derive stats for
 						CExpression *pexprScalar, // scalar condition used for stats derivation
 						IStatistics *pstats, // statistics object of attached expression
-						DrgPstat *pdrgpstatOuter // array of stats objects where outer references are defined
+						DrgPstat *pdrgpstatOuter, // array of stats objects where outer references are defined
+						IStatistics::EStatsJoinType eStatsJoinType
 				);
 	};
 

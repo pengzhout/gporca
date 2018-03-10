@@ -46,7 +46,7 @@ using namespace gpmd;
 
 // helper for LAS-joining histograms
 void
-CLeftAntiSemiJoinStatsProcessor::JoinHistograms
+CLeftAntiSemiJoinStatsProcessor::JoinHistogramsLASJ
 		(
 				IMemoryPool *pmp,
 				const CHistogram *phist1,
@@ -58,6 +58,7 @@ CLeftAntiSemiJoinStatsProcessor::JoinHistograms
 				CHistogram **pphist2, // output: histogram 2 after join
 				CDouble *pdScaleFactor, // output: scale factor based on the join
 				BOOL fEmptyInput,
+				IStatistics::EStatsJoinType,
 				BOOL fIgnoreLasjHistComputation
 		)
 {
